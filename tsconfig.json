@@ -1,0 +1,17 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.node.json" }
+  ],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+ "noEmitOnError": false,  // Allow emitting even if there are errors
+    "strict": false,         // Disable strict type checks
+    "skipLibCheck": true,    // Skip type checking of declaration files
+    "esModuleInterop": true
+  },
+}
