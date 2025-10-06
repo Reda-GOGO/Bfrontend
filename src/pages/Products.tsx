@@ -17,6 +17,7 @@ import {
   ChevronRight,
   ImageOff,
   Package,
+  Plus,
   Search,
 } from "lucide-react";
 import { useNavigate } from "react-router/internal/react-server-client";
@@ -112,7 +113,10 @@ export default function ProductsTable() {
     <>
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
-        <Button onClick={(e) => handleCreate(e)}>Add product</Button>
+        <Button className="max-sm:w-full" onClick={(e) => handleCreate(e)}>
+          <Plus />
+          Add product
+        </Button>
         <div className="relative w-full ">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
@@ -127,6 +131,7 @@ export default function ProductsTable() {
         </div>
         <Button
           variant="secondary"
+          className="max-sm:w-full"
           disabled={selected.length === 0}
           onClick={() => toast(`Bulk action on: ${selected}`)}
         >

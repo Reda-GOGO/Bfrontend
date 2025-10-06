@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/drawer";
 import { Label } from "@/components/ui/label";
 import {
+  CircleX,
   Landmark,
   Mail,
   MapPin,
@@ -41,6 +42,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { useOrderContext } from "@/contexts/orderContext";
+import { toast } from "sonner";
 
 interface Customer {
   id: number;
@@ -112,51 +114,153 @@ export default function CustomerForm() {
     }
   }, [searchValue, customers]);
 
-  const CustomerCreateForm = (
-    <form className="space-y-4">
-      <div className="grid gap-2">
-        <Label htmlFor="name" className="flex items-center gap-2">
-          <User className="w-4 h-4" />
-          Name
-        </Label>
-        <Input id="name" placeholder="Customer name" required />
-      </div>
-      <div className="grid gap-2">
-        <Label htmlFor="email" className="flex items-center gap-2">
-          <Mail className="w-4 h-4" />
-          Email
-        </Label>
-        <Input id="email" type="email" placeholder="Email address" />
-      </div>
-      <div className="grid gap-2">
-        <Label htmlFor="phone" className="flex items-center gap-2">
-          <Phone className="w-4 h-4" />
-          Phone
-        </Label>
-        <Input id="phone" placeholder="+212..." />
-      </div>
-      <div className="grid gap-2">
-        <Label htmlFor="ice" className="flex items-center gap-2">
-          <Landmark className="w-4 h-4" />
-          ICE
-        </Label>
-        <Input id="ice" placeholder="ICE number" />
-      </div>
-      <div className="grid gap-2">
-        <Label htmlFor="address" className="flex items-center gap-2">
-          <MapPin className="w-4 h-4" />
-          Address
-        </Label>
-        <Input id="address" placeholder="Customer address" />
-      </div>
-      <div className="flex justify-end pt-2">
-        <Button type="submit" className="gap-2">
-          <UserPlus2 className="w-4 h-4" />
-          Create
-        </Button>
-      </div>
-    </form>
-  );
+  const CustomerCreateForm = () => {
+    const [formData, setFormData] = useState({
+      name: "",
+      email: "",
+      phone: "",
+      ice: "",
+      address: "",
+    });
+
+    const [errors, setErrors] = useState({
+      name: "",
+      ice: "",
+    });
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const { id, value } = e.target;
+
+      setFormData((prev) => ({
+        ...prev,
+        [id]: value,
+      }));
+
+      // Clear error as user types
+      if (errors[id as keyof typeof errors]) {
+        setErrors((prev) => ({
+          ...prev,
+          [id]: "",
+        }));
+      }
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+
+      const newErrors = {
+        name: formData.name.trim() === "" ? "Name is required" : "",
+        ice: formData.ice.trim() === "" ? "ICE number is required" : "",
+      };
+
+      setErrors(newErrors);
+
+      const hasErrors = Object.values(newErrors).some((err) => err !== "");
+      if (hasErrors) return;
+
+      // Submit logic here
+      console.log("Submitted:", formData);
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/customers`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        });
+
+        const data = await res.json();
+        toast.message("failed creating order", {
+          description: "missing order items ...",
+          icon: <CircleX className="text-red-500" />,
+        });
+        console.log("Saved customer:", data);
+      } catch (error) {
+        console.error("Failed creating customer ...", error);
+      }
+    };
+
+    return (
+      <form className="space-y-4" onSubmit={handleSubmit}>
+        <div className="grid gap-2">
+          <Label htmlFor="name" className="flex items-center gap-2">
+            <User className="w-4 h-4" />
+            Name
+          </Label>
+          <Input
+            id="name"
+            placeholder="Customer name"
+            value={formData.name}
+            onChange={handleChange}
+            aria-invalid={!!errors.name}
+          />
+          {errors.name && <p className="text-sm text-red-600">{errors.name}</p>}
+        </div>
+
+        <div className="grid gap-2">
+          <Label htmlFor="email" className="flex items-center gap-2">
+            <Mail className="w-4 h-4" />
+            Email
+          </Label>
+          <Input
+            id="email"
+            type="email"
+            placeholder="Email address"
+            value={formData.email}
+            onChange={handleChange}
+          />
+        </div>
+
+        <div className="grid gap-2">
+          <Label htmlFor="phone" className="flex items-center gap-2">
+            <Phone className="w-4 h-4" />
+            Phone
+          </Label>
+          <Input
+            id="phone"
+            placeholder="+212..."
+            value={formData.phone}
+            onChange={handleChange}
+          />
+        </div>
+
+        <div className="grid gap-2">
+          <Label htmlFor="ice" className="flex items-center gap-2">
+            <Landmark className="w-4 h-4" />
+            ICE
+          </Label>
+          <Input
+            id="ice"
+            placeholder="ICE number"
+            value={formData.ice}
+            onChange={handleChange}
+            aria-invalid={!!errors.ice}
+          />
+          {errors.ice && <p className="text-sm text-red-600">{errors.ice}</p>}
+        </div>
+
+        <div className="grid gap-2">
+          <Label htmlFor="address" className="flex items-center gap-2">
+            <MapPin className="w-4 h-4" />
+            Address
+          </Label>
+          <Input
+            id="address"
+            placeholder="Customer address"
+            value={formData.address}
+            onChange={handleChange}
+          />
+        </div>
+
+        <div className="flex justify-end pt-2">
+          <Button type="submit" className="gap-2">
+            <UserPlus2 className="w-4 h-4" />
+            Create
+          </Button>
+        </div>
+      </form>
+    );
+  };
 
   return (
     <Card className="w-full">
@@ -255,27 +359,29 @@ export default function CustomerForm() {
           </div>
         )}
 
-        {isDesktop
-          ? (
-            <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Create Customer</DialogTitle>
-                </DialogHeader>
-                {CustomerCreateForm}
-              </DialogContent>
-            </Dialog>
-          )
-          : (
-            <Drawer open={createOpen} onOpenChange={setCreateOpen}>
-              <DrawerContent className="p-4">
-                <DrawerHeader className="px-1">
-                  <DrawerTitle>Create Customer</DrawerTitle>
-                </DrawerHeader>
-                {CustomerCreateForm}
-              </DrawerContent>
-            </Drawer>
-          )}
+        {isDesktop ? (
+          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Create Customer</DialogTitle>
+              </DialogHeader>
+              <CustomerCreateForm />
+            </DialogContent>
+          </Dialog>
+        ) : (
+          <Drawer
+            open={createOpen}
+            repositionInputs={false}
+            onOpenChange={setCreateOpen}
+          >
+            <DrawerContent className="p-4">
+              <DrawerHeader className="px-1">
+                <DrawerTitle>Create Customer</DrawerTitle>
+              </DrawerHeader>
+              <CustomerCreateForm />
+            </DrawerContent>
+          </Drawer>
+        )}
       </CardContent>
     </Card>
   );

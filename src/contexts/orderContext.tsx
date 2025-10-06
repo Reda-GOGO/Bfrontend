@@ -39,9 +39,8 @@ interface OrderContextType {
 export const OrderContext = createContext<OrderContextType | null>(null);
 
 export const OrderProvider = ({ children }: { children: ReactNode }) => {
-  const [customer, setCustomer] = useState<
-    Pick<OrderType, "customerId" | null>
-  >(null);
+  const [customer, setCustomer] =
+    useState<Pick<OrderType, "customerId" | null>>();
   const [status, setStatus] = useState<string>("");
   const [type, setType] = useState<string>("");
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
@@ -65,8 +64,9 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
     selectedProducts,
     setSelectedProducts,
   };
-  return <OrderContext.Provider value={value}>{children}
-  </OrderContext.Provider>;
+  return (
+    <OrderContext.Provider value={value}>{children}</OrderContext.Provider>
+  );
 };
 
 // 👇 Export hook for easier usage

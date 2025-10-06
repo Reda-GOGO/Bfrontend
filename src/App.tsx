@@ -9,7 +9,10 @@ import Invoice from "./pages/Invoice";
 import { PrivateRoute } from "./components/PrivateRoute";
 import CreateProduct from "./pages/CreateProduct.tsx";
 import CreateOrder from "./pages/CreateOrder.tsx";
+import Orders from "./pages/Orders.tsx";
 import Order from "./pages/Order.tsx";
+import Setting from "./pages/Setting.tsx";
+
 function App() {
   return (
     <Routes>
@@ -21,10 +24,12 @@ function App() {
           <Route path="/products" element={<Products />} />
           <Route path="/products/:title" element={<Product />} />
           <Route path="/products/create" element={<CreateProduct />} />
-          <Route path="/orders" element={<Order />} />
+          <Route path="/orders" element={<Orders />} />
+          <Route path="/orders/:id" element={<Order />} />
           <Route path="/orders/create" element={<CreateOrder />} />
           <Route path="/invoice" element={<Invoice />} />
           <Route path="/inventory" element={<Inventory />} />
+          <Route path="/setting" element={<Setting />} />
         </Route>
       </Route>
     </Routes>

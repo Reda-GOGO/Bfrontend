@@ -76,8 +76,8 @@ export default function OrderLine({ product }) {
             productUnit: unit.id ?? null,
             price: unit.price,
           }
-          : p
-      )
+          : p,
+      ),
     );
   };
 
@@ -92,8 +92,8 @@ export default function OrderLine({ product }) {
             ...p,
             quantity,
           }
-          : p
-      )
+          : p,
+      ),
     );
   };
 
@@ -108,8 +108,8 @@ export default function OrderLine({ product }) {
             ...p,
             price: newPrice,
           }
-          : p
-      )
+          : p,
+      ),
     );
   };
 
@@ -123,8 +123,8 @@ export default function OrderLine({ product }) {
             ...p,
             unit: editedUnitName,
           }
-          : p
-      )
+          : p,
+      ),
     );
   };
 
@@ -138,19 +138,17 @@ export default function OrderLine({ product }) {
       {/* Top section: Image & Info */}
       <div className="flex items-start gap-4 mb-4">
         <div className="flex-shrink-0">
-          {product.image
-            ? (
-              <img
-                src={`${import.meta.env.VITE_API_URL}${product.image}`}
-                alt={product.name}
-                className="h-16 w-16 object-cover rounded-md"
-              />
-            )
-            : (
-              <div className="h-16 w-16 flex items-center justify-center bg-muted rounded-md">
-                <ImageOff className="text-muted-foreground" />
-              </div>
-            )}
+          {product.image ? (
+            <img
+              src={`${import.meta.env.VITE_API_URL}${product.image}`}
+              alt={product.name}
+              className="h-16 w-16 object-cover rounded-md"
+            />
+          ) : (
+            <div className="h-16 w-16 flex items-center justify-center bg-muted rounded-md">
+              <ImageOff className="text-muted-foreground" />
+            </div>
+          )}
         </div>
         <div className="flex flex-col">
           <span className="font-medium text-sm">{product.name}</span>
@@ -165,10 +163,10 @@ export default function OrderLine({ product }) {
         <div>
           <Label className="text-xs mb-1 block">Select Unit</Label>
           <Select value={selectedUnit.name} onValueChange={handleUnitChange}>
-            <SelectTrigger>
+            <SelectTrigger className="w-full">
               <SelectValue>{selectedUnit.name}</SelectValue>
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="w-full">
               <SelectGroup>
                 <SelectLabel>Units</SelectLabel>
                 {allUnits.map((unit, index) => (

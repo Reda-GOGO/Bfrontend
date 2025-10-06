@@ -7,10 +7,13 @@ import PaymentForm from "@/components/own/orders/PaymentForm.tsx";
 import ProductForm from "@/components/own/orders/ProductForm.tsx";
 import { useOrderContext } from "@/contexts/orderContext";
 import { useAuth } from "@/contexts/userContext";
+import { toast } from "sonner";
+import { CircleCheckBig, CircleX } from "lucide-react";
+import { useNavigate } from "react-router";
 
 export default function Create() {
   const isDesktop = useMediaQuery("(min-width : 768px)");
-
+  const navigate = useNavigate();
   const { orderItems, type, status, customer, totalAmount, totalAmountString } =
     useOrderContext();
   const { currentUser } = useAuth();
@@ -22,7 +25,17 @@ export default function Create() {
     console.log("totalAmount :", totalAmount, typeof totalAmount);
     console.log("totalAmountString :", totalAmountString);
     console.log("currentUser : ", currentUser);
-
+    if (orderItems.length == 0) {
+      return toast.message("failed creating order", {
+        description: "missing order items ...",
+        icon: <CircleX className="text-red-500" />,
+      });
+    }
+    if (type === "" && status === "" && customer === undefined) {
+      return toast("failed creating order", {
+        icon: <CircleX className="text-red-500" />,
+      });
+    }
     const payload = {
       orderItems,
       type: type,
@@ -41,9 +54,24 @@ export default function Create() {
         body: JSON.stringify(payload),
       });
       const data = await res.json();
-      console.log("saved order : ", data);
+      if (res.status === 201) {
+        toast(" order created succesfully", {
+          icon: <CircleCheckBig className="text-green-500" />,
+        });
+        navigate("/orders");
+      } else {
+        toast.message("Failed creating order", {
+          description: "missing fields ..",
+          icon: <CircleX className="text-red-500" />,
+        });
+      }
+      console.log("saved order : ", data, res.status);
     } catch (error) {
       console.log("error adding order : ", error);
+
+      toast("Failed creating order", {
+        icon: <CircleX className="text-red-500" />,
+      });
     }
   };
   return (
