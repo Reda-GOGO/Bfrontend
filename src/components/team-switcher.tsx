@@ -37,7 +37,7 @@ export function TeamSwitcher({
     <>
       <div className="flex gap-2">
         <div className=" flex aspect-square size-8 items-center justify-center rounded-lg">
-          <div className="rounded-full w-full h-full">
+          <div className="rounded-full w-full h-full bg-white">
             <img src={logo} alt="" />
           </div>
         </div>

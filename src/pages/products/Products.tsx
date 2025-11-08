@@ -40,8 +40,7 @@ type Product = {
   cost: number;
   price: number;
   unit: string;
-  inventoryUnit: string;
-  inventoryQuantity: number;
+  availableQty: number;
   vendorName: string | null;
   vendorContact: string | null;
   createdAt: string;
@@ -93,11 +92,11 @@ export default function ProductsTable() {
       setSelected(products.map((p) => p.id));
     }
   };
-  const handleRowClick = (e: Event, productId: number) => {
+  const handleRowClick = (e: Event, productHandle: number) => {
     e.preventDefault();
     const targetElement = e.target as HTMLElement;
     if (targetElement.tagName !== "BUTTON") {
-      navigate(`/products/${productId}`);
+      navigate(`/products/${productHandle}`);
     }
   };
   const toggleSelect = (id: number) => {
@@ -184,7 +183,7 @@ export default function ProductsTable() {
                 <TableRow
                   key={product.id}
                   className="hover:bg-muted/50 transition-colors"
-                  onClick={(e) => handleRowClick(e, product.id)}
+                  onClick={(e) => handleRowClick(e, product.handle)}
                 >
                   <TableCell>
                     <Checkbox
@@ -206,9 +205,7 @@ export default function ProductsTable() {
                     )}
                   </TableCell>
                   <TableCell className="font-medium">{product.name}</TableCell>
-                  <TableCell>
-                    {product.inventoryQuantity} {product.inventoryUnit}
-                  </TableCell>
+                  <TableCell>{product.availableQty}</TableCell>
                   <TableCell>{product.unit}</TableCell>
                   <TableCell>
                     {product.cost} <b>MAD</b>

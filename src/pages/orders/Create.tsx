@@ -77,12 +77,12 @@ export default function Create() {
   return (
     <Back>
       <div className="flex w-full flex-col">
-        <div className="lg:grid lg:grid-cols-3 w-full gap-4 xl:px-46">
-          <div className="lg:col-span-2 flex flex-col gap-2">
+        <div className="@[768px]/main:grid @[768px]/main:grid-cols-3 w-full gap-4 xl:px-46">
+          <div className="@[768px]/main:col-span-2 flex flex-col gap-2">
             <ProductForm />
             <PaymentForm />
           </div>
-          <div className="lg:col-span-1 max-lg:py-4 flex flex-col gap-2">
+          <div className="@[768px]/main:col-span-1 max-lg:py-4 flex flex-col gap-2">
             <CustomerForm />
             <TypeForm />
           </div>

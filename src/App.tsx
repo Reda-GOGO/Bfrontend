@@ -3,14 +3,14 @@ import { Dashboard } from "./components/app-sidebar";
 import Login from "./pages/Login";
 import Inventory from "./pages/Inventory";
 import Overview from "./pages/Overview";
-import Products from "./pages/Products";
-import Product from "./pages/Product";
+import Products from "./pages/products/Products";
+import Product from "./pages/products/Product";
 import Invoice from "./pages/Invoice";
 import { PrivateRoute } from "./components/PrivateRoute";
-import CreateProduct from "./pages/CreateProduct.tsx";
-import CreateOrder from "./pages/CreateOrder.tsx";
-import Orders from "./pages/Orders.tsx";
-import Order from "./pages/Order.tsx";
+import CreateProduct from "./pages/products/Create.tsx";
+import CreateOrder from "./pages/orders/Create.tsx";
+import Orders from "./pages/orders/Orders.tsx";
+import Order from "./pages/orders/Order.tsx";
 import Setting from "./pages/Setting.tsx";
 
 function App() {

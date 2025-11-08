@@ -21,7 +21,7 @@ const coloredColumnStyle = {
   backgroundColor: "#7bd3ea",
 };
 
-const styles = StyleSheet.create({
+export const styles = StyleSheet.create({
   page: {
     padding: 40,
     fontSize: 12,
@@ -131,18 +131,18 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
 });
-const InvoiceImage = ({ logoUrl }) => (
+export const InvoiceImage = ({ logoUrl }) => (
   <View style={styles.header}>
     <Image style={styles.logo} src={logoUrl} />
   </View>
 );
-const InvoiceCustomer = () => (
+export const InvoiceCustomer = () => (
   <View style={styles.customerInfo.container}>
     <Text style={styles.customerInfo.name}>ARJDAL BADR</Text>
     <Text style={styles.customerInfo.number}>ICE : 003695576000050</Text>
   </View>
 );
-const InvoiceCustomerContainer = () => (
+export const InvoiceCustomerContainer = () => (
   <>
     <Text style={styles.title}>Facture</Text>
     <View style={styles.invoiceData.container}>
@@ -180,13 +180,13 @@ const baseHeaderStyle = {
   backgroundColor: "#7bd3ea",
 };
 
-const InvoiceHeaderColumn = ({ title, style }) => (
+export const InvoiceHeaderColumn = ({ title, style }) => (
   <View style={{ ...baseHeaderStyle, ...style }}>
     <Text>{title}</Text>
   </View>
 );
 
-const InvoiceTableHeader = () => (
+export const InvoiceTableHeader = () => (
   <View style={{ display: "flex", flexDirection: "row" }}>
     <InvoiceHeaderColumn title="Qté" style={{ width: "10%" }} />
     <InvoiceHeaderColumn
@@ -218,15 +218,13 @@ const baseColumnStyle = {
   padding: "2px",
 };
 
-const InvoiceColumn = ({ style, dataKey }) => (
+export const InvoiceColumn = ({ style, dataKey }) => (
   <View style={{ ...baseColumnStyle, ...style }}>
-    {data.map((item, index) => (
-      <Text key={index}>{item[dataKey]}</Text>
-    ))}
+    {data.map((item, index) => <Text key={index}>{item[dataKey]}</Text>)}
   </View>
 );
 
-const InvoiceTableBody = () => {
+export const InvoiceTableBody = () => {
   const totalSum = data.reduce((acc, item) => {
     return acc + parseFloat(item.price) * parseFloat(item.quantity);
   }, 0);
@@ -287,7 +285,7 @@ const InvoiceTableBody = () => {
     </View>
   );
 };
-const InvoiceTableFooter = () => (
+export const InvoiceTableFooter = () => (
   <View
     style={{
       display: "flex",
@@ -488,7 +486,7 @@ const rightColumnStyle = {
   width: "15%",
 };
 
-const InvoiceTotalAmount = () => {
+export const InvoiceTotalAmount = () => {
   return (
     <View style={containerStyle}>
       <View style={[columnStyle, leftColumnStyle]}>

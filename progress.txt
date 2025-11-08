@@ -1,0 +1,33 @@
+- Progress Timeline  : 
+
+Orders : 
+	[] Orders stats & charts .
+	[] Orders items selection ui design change .
+
+Products : 
+	[] Product ui design update .
+
+Invoices :
+	[] Invoice page  .
+
+Setting :
+	[] Setting page ui design .
+	[] Setting page api implementation  .
+
+Team	:
+	[] Team management ui design .
+	[] Team management api implementation .
+
+Permission : 
+	[] Permissions for users .
+	[] Attribut Based Access Control implementation  .
+
+Profile : 
+	[] languanges translation .
+	[] themes switching .
+
+Internalization  :
+	[] Internalization using i18next .
+
+
+

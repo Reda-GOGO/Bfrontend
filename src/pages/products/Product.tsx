@@ -8,7 +8,7 @@ import {
   PricingCard,
   SellingUnitsCard,
   VendorCard,
-} from "./CreateProduct.tsx";
+} from "./Create.tsx";
 
 import { toast } from "sonner";
 import { CircleCheckBig, CircleX } from "lucide-react";
@@ -17,7 +17,7 @@ import { ChartBarHorizontal } from "@/components/own/charts/myBarChart.tsx";
 import { ChartRadialText } from "@/components/own/charts/myRadialChart.tsx";
 
 interface UpdateProductProps {
-  productId: number;
+  productHandle: string;
 }
 
 export default function Update() {
@@ -40,13 +40,13 @@ export default function Update() {
     existingImage: "", // store existing image URL
   });
   const { title } = useParams();
-  const productId = parseInt(title);
+  const proudctHandle = title;
   // Fetch product by ID and populate form
   useEffect(() => {
     async function fetchProduct() {
       try {
         const res = await fetch(
-          `${import.meta.env.VITE_API_URL}/product/${productId}`,
+          `${import.meta.env.VITE_API_URL}/product/${proudctHandle}`,
         );
         const data = await res.json();
 
@@ -82,7 +82,7 @@ export default function Update() {
     }
 
     fetchProduct();
-  }, [productId]);
+  }, [proudctHandle]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,7 +125,7 @@ export default function Update() {
 
     try {
       const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/product/${productId}`,
+        `${import.meta.env.VITE_API_URL}/product/${proudctHandle}`,
         {
           method: "PUT", // update method
           body: form,

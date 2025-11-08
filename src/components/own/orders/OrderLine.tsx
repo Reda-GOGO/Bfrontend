@@ -1,6 +1,6 @@
 import { useOrderContext } from "@/contexts/orderContext";
 import { Input } from "@/components/ui/input";
-import { ImageOff, Trash } from "lucide-react";
+import { ImageOff, Minus, Plus, Trash } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -18,16 +18,7 @@ import { Label } from "@/components/ui/label";
 export default function OrderLine({ product }) {
   const { setOrderItems, setSelectedProducts } = useOrderContext();
 
-  const baseUnit = useMemo(
-    () => ({
-      name: product.unit,
-      price: product.price,
-      quantityInBase: 1,
-    }),
-    [product.unit, product.price],
-  );
-
-  const otherUnits = useMemo(
+  const allUnits = useMemo(
     () =>
       product.units.map((u) => ({
         name: u.name,
@@ -38,11 +29,6 @@ export default function OrderLine({ product }) {
     [product.units],
   );
 
-  const allUnits = useMemo(
-    () => [baseUnit, ...otherUnits],
-    [baseUnit, otherUnits],
-  );
-
   const [selectedUnit, setSelectedUnit] = useState(allUnits[0]);
   const [editedUnitName, setEditedUnitName] = useState(allUnits[0].name);
   const [editingUnitName, setEditingUnitName] = useState(false);
@@ -51,87 +37,76 @@ export default function OrderLine({ product }) {
   const [selectedPrice, setSelectedPrice] = useState(product.price);
   const [currentQuantity, setCurrentQuantity] = useState(1);
 
-  // Sync state on product change (like reorder or deletion)
+  // Update line total & profit
+  const lineTotal = useMemo(
+    () => parseFloat((selectedPrice * currentQuantity).toFixed(2)),
+    [selectedPrice, currentQuantity],
+  );
+
+  const lineProfit = useMemo(
+    () =>
+      parseFloat(((selectedPrice - product.cost) * currentQuantity).toFixed(2)),
+    [selectedPrice, currentQuantity, product.cost],
+  );
+
+  // Sync orderItems whenever price or quantity changes
+  useEffect(() => {
+    setOrderItems((prev) =>
+      prev.map((p) =>
+        p.productId === product.id
+          ? {
+            ...p,
+            unit: selectedUnit.name,
+            productUnit: selectedUnit.id ?? null,
+            price: selectedPrice,
+            quantity: currentQuantity,
+            totalAmount: lineTotal,
+            unitProfit: selectedPrice - product.cost,
+            totalProfit: lineProfit,
+          }
+          : p,
+      ),
+    );
+  }, [selectedPrice, currentQuantity, selectedUnit, lineTotal, lineProfit]);
+
+  // Reset when product changes
   useEffect(() => {
     setSelectedUnit(allUnits[0]);
     setEditedUnitName(allUnits[0].name);
     setSelectedPrice(allUnits[0].price);
     setCurrentQuantity(1);
-  }, [product.id]); // only when product changes
+  }, [product.id]);
 
   const handleUnitChange = (unitName: string) => {
     const unit = allUnits.find((u) => u.name === unitName);
     if (!unit) return;
-
     setSelectedUnit(unit);
     setEditedUnitName(unit.name);
     setSelectedPrice(unit.price);
-
-    setOrderItems((prev) =>
-      prev.map((p) =>
-        p.productId === product.id
-          ? {
-            ...p,
-            unit: unit.name,
-            productUnit: unit.id ?? null,
-            price: unit.price,
-          }
-          : p,
-      ),
-    );
   };
 
   const handleQuantityChange = (e) => {
     const quantity = parseFloat(e.target.value) || 0;
     setCurrentQuantity(quantity);
-
-    setOrderItems((prev) =>
-      prev.map((p) =>
-        p.productId === product.id
-          ? {
-            ...p,
-            quantity,
-          }
-          : p,
-      ),
-    );
   };
 
   const handlePriceChange = (e) => {
     const newPrice = parseFloat(e.target.value) || 0;
     setSelectedPrice(newPrice);
-
-    setOrderItems((prev) =>
-      prev.map((p) =>
-        p.productId === product.id
-          ? {
-            ...p,
-            price: newPrice,
-          }
-          : p,
-      ),
-    );
   };
 
   const handleUnitRename = () => {
     setSelectedUnit((prev) => ({ ...prev, name: editedUnitName }));
-
-    setOrderItems((prev) =>
-      prev.map((p) =>
-        p.productId === product.id
-          ? {
-            ...p,
-            unit: editedUnitName,
-          }
-          : p,
-      ),
-    );
   };
 
   const deleteItem = () => {
     setSelectedProducts((prev) => prev.filter((p) => p.id !== product.id));
     setOrderItems((prev) => prev.filter((p) => p.productId !== product.id));
   };
+
+  const incrementQuantity = () => setCurrentQuantity(currentQuantity + 1);
+  const decrementQuantity = () =>
+    setCurrentQuantity(currentQuantity > 1 ? currentQuantity - 1 : 1);
 
   return (
     <div className="w-full border rounded-xl p-4 shadow-sm bg-background mb-4">
@@ -150,16 +125,28 @@ export default function OrderLine({ product }) {
             </div>
           )}
         </div>
-        <div className="flex flex-col">
-          <span className="font-medium text-sm">{product.name}</span>
-          <span className="text-xs text-muted-foreground">
-            Unit price: {selectedPrice} MAD
-          </span>
+        <div className="flex w-full justify-between">
+          <div className="flex flex-col">
+            <span className="font-medium text-sm">{product.name}</span>
+            <span className="text-xs text-muted-foreground">
+              Unit price: {selectedPrice} MAD
+            </span>
+          </div>
+          <div className="flex">
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={deleteItem}
+              className="w-full sm:w-auto flex justify-center"
+            >
+              <Trash className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* Unit & Rename */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 gap-3 mb-3">
+      <div className="grid grid-cols-2 gap-3 mb-3">
         <div>
           <Label className="text-xs mb-1 block">Select Unit</Label>
           <Select value={selectedUnit.name} onValueChange={handleUnitChange}>
@@ -199,7 +186,7 @@ export default function OrderLine({ product }) {
       </div>
 
       {/* Price & Quantity */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
         <div>
           <div className="flex items-center justify-between mb-1">
             <Label className="text-xs">Edit Price</Label>
@@ -216,24 +203,31 @@ export default function OrderLine({ product }) {
 
         <div>
           <Label className="text-xs mb-1 block">Quantity</Label>
-          <Input
-            type="number"
-            value={currentQuantity}
-            onChange={handleQuantityChange}
-          />
+          <div className="flex gap-1 items-center">
+            <Button size="sm" onClick={decrementQuantity}>
+              <Minus />
+            </Button>
+            <Input
+              type="number"
+              value={currentQuantity}
+              onChange={handleQuantityChange}
+              className="text-center"
+            />
+            <Button size="sm" onClick={incrementQuantity}>
+              <Plus />
+            </Button>
+          </div>
         </div>
+      </div>
 
-        <div className="flex items-end justify-end sm:justify-start">
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={deleteItem}
-            className="w-full sm:w-auto"
-          >
-            <Trash className="w-4 h-4 mr-2" />
-            Remove
-          </Button>
-        </div>
+      {/* Line Total & Profit */}
+      <div className="mt-2 p-2 bg-muted rounded-md text-sm flex justify-between">
+        <span>Line Total:</span>
+        <span>{lineTotal} MAD</span>
+      </div>
+      <div className="mt-1 p-2 bg-muted rounded-md text-sm flex justify-between">
+        <span>Profit:</span>
+        <span>{lineProfit} MAD</span>
       </div>
     </div>
   );
