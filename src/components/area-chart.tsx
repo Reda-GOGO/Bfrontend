@@ -121,11 +121,11 @@ const chartConfig = {
   },
   desktop: {
     label: "Desktop",
-    color: "hsl(var(--chart-1))",
+    color: "var(--color-blue-500)",
   },
   mobile: {
     label: "Mobile",
-    color: "hsl(var(--chart-2))",
+    color: "var(--color-blue-200)",
   },
 } satisfies ChartConfig;
 export function ChartAreaInteractive() {
@@ -150,7 +150,7 @@ export function ChartAreaInteractive() {
     return date >= startDate;
   });
   return (
-    <Card className="@container/card">
+    <Card className="@container/card w-full">
       <CardHeader className="relative">
         <CardTitle>Total Visitors</CardTitle>
         <CardDescription>
@@ -252,15 +252,15 @@ export function ChartAreaInteractive() {
             <Area
               dataKey="mobile"
               type="natural"
-              fill="url(#fillMobile)"
-              stroke="var(--color-mobile)"
+              fill="var(--color-blue-200)"
+              stroke="var(--color-blue-200)"
               stackId="a"
             />
             <Area
               dataKey="desktop"
               type="natural"
-              fill="url(#fillDesktop)"
-              stroke="var(--color-desktop)"
+              fill="var(--color-blue-500)"
+              stroke="var(--color-blue-500)"
               stackId="a"
             />
           </AreaChart>

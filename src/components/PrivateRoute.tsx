@@ -1,5 +1,5 @@
 import { Navigate, Outlet } from "react-router";
-import { Loader2 } from "lucide-react";
+import { Loader, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/userContext";
 import { useEffect } from "react";
@@ -12,16 +12,15 @@ export function Spinner({ className, ...props }: SpinnerProps) {
       className={cn("flex items-center justify-center h-screen", className)}
       {...props}
     >
-      <Loader2 className="h-16 w-16 animate-spin text-blue-500" />
+      <Loader className="h-16 w-16 animate-spin text-blue-500" />
     </div>
   );
 }
 export const PrivateRoute = () => {
   const { currentUser, loading } = useAuth();
-
+  console.log(currentUser);
   if (loading) {
     return <Spinner />;
   }
-
   return currentUser ? <Outlet /> : <Navigate to="/login" />;
 };

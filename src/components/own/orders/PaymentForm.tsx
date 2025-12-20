@@ -11,7 +11,7 @@ export default function PaymentForm() {
   const [discount, setDiscount] = useState(0);
 
   const subtotal = orderItems.reduce((sum, item) => {
-    return sum + item.quantity * item.price;
+    return sum + item.quantity * item.unitPrice;
   }, 0);
 
   const taxRate = 0.2;
@@ -24,9 +24,10 @@ export default function PaymentForm() {
   const getTotalInWordsFr = (amount: number) => {
     const [dirhams, centimes] = amount.toFixed(2).split(".");
     const dirhamsWords = n2words(parseInt(dirhams), { lang: "fr" });
-    const centimesWords = parseInt(centimes) > 0
-      ? ` et ${n2words(parseInt(centimes), { lang: "fr" })} centimes`
-      : "";
+    const centimesWords =
+      parseInt(centimes) > 0
+        ? ` et ${n2words(parseInt(centimes), { lang: "fr" })} centimes`
+        : "";
     return `${dirhamsWords} dirhams${centimesWords}`;
   };
 

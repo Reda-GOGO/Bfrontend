@@ -15,10 +15,8 @@ export enum OrderTypeEnum {
   ESTIMATE = "estimate",
 }
 
-// -------------------------------------------------------------
-
 interface OrderContextType {
-  customer: Pick<OrderType, "customerId" | null>; // Replace with proper customer type if available
+  customer: Pick<OrderType, "customerId" | null>;
   setCustomer: React.Dispatch<
     React.SetStateAction<Pick<OrderType, "customerId" | null>>
   >;
@@ -69,7 +67,6 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// 👇 Export hook for easier usage
 export const useOrderContext = () => {
   const context = useContext(OrderContext);
   if (!context) {

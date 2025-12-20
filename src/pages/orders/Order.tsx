@@ -186,9 +186,9 @@ export default function OrderDetails() {
                     {order.items.map((item) => (
                       <TableRow key={item.id}>
                         <TableCell className="flex items-center gap-3">
-                          {item.products.image ? (
+                          {item.product.image ? (
                             <img
-                              src={`${import.meta.env.VITE_API_URL}${item.products.image
+                              src={`${import.meta.env.VITE_API_URL}${item.product.image
                                 }`}
                               className="h-12 w-12 object-cover rounded-md"
                             />
@@ -200,12 +200,12 @@ export default function OrderDetails() {
                           )}
                         </TableCell>
                         <TableCell>{item.name}</TableCell>
-                        <TableCell>{item.products.vendorName}</TableCell>
+                        <TableCell>{item.product.vendorName}</TableCell>
                         <TableCell>{item.unit}</TableCell>
                         <TableCell>{item.quantity}</TableCell>
-                        <TableCell>MAD {item.price.toFixed(2)}</TableCell>
+                        <TableCell>MAD {item.unitPrice.toFixed(2)}</TableCell>
                         <TableCell className="font-semibold">
-                          MAD {(item.quantity * item.price).toFixed(2)}
+                          MAD {(item.quantity * item.unitPrice).toFixed(2)}
                         </TableCell>
                       </TableRow>
                     ))}

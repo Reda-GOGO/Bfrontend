@@ -19,6 +19,7 @@ export default function SearchRow({ product }) {
           {
             productId: product.id,
             price: product.price,
+            unitPrice: product.price,
             name: product.name,
             unit: product.unit,
             quantity: 1,

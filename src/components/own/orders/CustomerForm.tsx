@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/drawer";
 import { Label } from "@/components/ui/label";
 import {
-  CircleX,
   Landmark,
   Mail,
   MapPin,
@@ -25,22 +24,8 @@ import {
   Search,
   User,
   UserPlus2,
-  Users,
 } from "lucide-react";
 import useMediaQuery from "@/hooks/useMediaQuery";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
 import { useOrderContext } from "@/contexts/orderContext";
 import { toast } from "sonner";
 
@@ -56,19 +41,9 @@ interface Customer {
 const fetchCustomersFromAPI = async (): Promise<Customer[]> => {
   try {
     const resp = await fetch(`${import.meta.env.VITE_API_URL}/customers`);
-    if (!resp.ok) {
-      throw new Error(`HTTP error: ${resp.status}`);
-    }
+    if (!resp.ok) throw new Error(`HTTP error: ${resp.status}`);
     const body = await resp.json();
-    // adjust depending on API return shape
-    // e.g. { customers: [...] } or just [...]
-    if (Array.isArray(body)) {
-      return body;
-    }
-    if (body.customers && Array.isArray(body.customers)) {
-      return body.customers;
-    }
-    return [];
+    return Array.isArray(body) ? body : body.customers || [];
   } catch (err) {
     console.error("Failed to fetch customers:", err);
     return [];
@@ -78,16 +53,15 @@ const fetchCustomersFromAPI = async (): Promise<Customer[]> => {
 export default function CustomerForm() {
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const { setCustomer } = useOrderContext();
+
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [filtered, setFiltered] = useState<Customer[]>([]);
   const [searchValue, setSearchValue] = useState("");
-  const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
     null,
   );
-  const [popoverOpen, setPopoverOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
-
-  const selectedCustomer = customers.find((c) => c.id === selectedCustomerId);
+  const [showDropdown, setShowDropdown] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -99,20 +73,27 @@ export default function CustomerForm() {
   }, []);
 
   useEffect(() => {
-    if (searchValue === "") {
+    const lower = searchValue.toLowerCase();
+    if (lower === "") {
       setFiltered(customers);
     } else {
-      const lower = searchValue.toLowerCase();
       setFiltered(
         customers.filter(
           (c) =>
             c.name.toLowerCase().includes(lower) ||
-            (c.email && c.email.toLowerCase().includes(lower)) ||
-            (c.phone && c.phone.toLowerCase().includes(lower)),
+            c.email?.toLowerCase().includes(lower) ||
+            c.phone?.toLowerCase().includes(lower),
         ),
       );
     }
   }, [searchValue, customers]);
+
+  const handleSelect = (cust: Customer) => {
+    setSelectedCustomer(cust);
+    setCustomer(cust.id);
+    setSearchValue(cust.name);
+    setShowDropdown(false);
+  };
 
   const CustomerCreateForm = () => {
     const [formData, setFormData] = useState({
@@ -130,132 +111,84 @@ export default function CustomerForm() {
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const { id, value } = e.target;
-
-      setFormData((prev) => ({
-        ...prev,
-        [id]: value,
-      }));
-
-      // Clear error as user types
+      setFormData((prev) => ({ ...prev, [id]: value }));
       if (errors[id as keyof typeof errors]) {
-        setErrors((prev) => ({
-          ...prev,
-          [id]: "",
-        }));
+        setErrors((prev) => ({ ...prev, [id]: "" }));
       }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
-
       const newErrors = {
         name: formData.name.trim() === "" ? "Name is required" : "",
         ice: formData.ice.trim() === "" ? "ICE number is required" : "",
       };
-
       setErrors(newErrors);
+      if (Object.values(newErrors).some((err) => err !== "")) return;
 
-      const hasErrors = Object.values(newErrors).some((err) => err !== "");
-      if (hasErrors) return;
-
-      // Submit logic here
-      console.log("Submitted:", formData);
       try {
         const res = await fetch(`${import.meta.env.VITE_API_URL}/customers`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formData),
         });
-
         const data = await res.json();
-        toast.message("failed creating order", {
-          description: "missing order items ...",
-          icon: <CircleX className="text-red-500" />,
-        });
-        console.log("Saved customer:", data);
-      } catch (error) {
-        console.error("Failed creating customer ...", error);
+        setCustomers((prev) => [...prev, data]);
+        setSelectedCustomer(data);
+        setCustomer(data.id);
+        setCreateOpen(false);
+        toast.success("Customer created successfully");
+      } catch {
+        toast.error("Failed to create customer");
       }
     };
 
     return (
       <form className="space-y-4" onSubmit={handleSubmit}>
-        <div className="grid gap-2">
-          <Label htmlFor="name" className="flex items-center gap-2">
-            <User className="w-4 h-4" />
-            Name
-          </Label>
-          <Input
-            id="name"
-            placeholder="Customer name"
-            value={formData.name}
-            onChange={handleChange}
-            aria-invalid={!!errors.name}
-          />
-          {errors.name && <p className="text-sm text-red-600">{errors.name}</p>}
-        </div>
-
-        <div className="grid gap-2">
-          <Label htmlFor="email" className="flex items-center gap-2">
-            <Mail className="w-4 h-4" />
-            Email
-          </Label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="Email address"
-            value={formData.email}
-            onChange={handleChange}
-          />
-        </div>
-
-        <div className="grid gap-2">
-          <Label htmlFor="phone" className="flex items-center gap-2">
-            <Phone className="w-4 h-4" />
-            Phone
-          </Label>
-          <Input
-            id="phone"
-            placeholder="+212..."
-            value={formData.phone}
-            onChange={handleChange}
-          />
-        </div>
-
-        <div className="grid gap-2">
-          <Label htmlFor="ice" className="flex items-center gap-2">
-            <Landmark className="w-4 h-4" />
-            ICE
-          </Label>
-          <Input
-            id="ice"
-            placeholder="ICE number"
-            value={formData.ice}
-            onChange={handleChange}
-            aria-invalid={!!errors.ice}
-          />
-          {errors.ice && <p className="text-sm text-red-600">{errors.ice}</p>}
-        </div>
-
-        <div className="grid gap-2">
-          <Label htmlFor="address" className="flex items-center gap-2">
-            <MapPin className="w-4 h-4" />
-            Address
-          </Label>
-          <Input
-            id="address"
-            placeholder="Customer address"
-            value={formData.address}
-            onChange={handleChange}
-          />
-        </div>
-
+        {[
+          {
+            id: "name",
+            label: "Name",
+            icon: <User className="w-4 h-4" />,
+            required: true,
+          },
+          { id: "email", label: "Email", icon: <Mail className="w-4 h-4" /> },
+          { id: "phone", label: "Phone", icon: <Phone className="w-4 h-4" /> },
+          {
+            id: "ice",
+            label: "ICE",
+            icon: <Landmark className="w-4 h-4" />,
+            required: true,
+          },
+          {
+            id: "address",
+            label: "Address",
+            icon: <MapPin className="w-4 h-4" />,
+          },
+        ].map(({ id, label, icon, required }) => (
+          <div key={id} className="grid gap-2">
+            <Label htmlFor={id} className="flex items-center gap-2">
+              {icon} {label}{" "}
+              {required && <span className="text-red-500">*</span>}
+            </Label>
+            <Input
+              id={id}
+              placeholder={`Enter ${label.toLowerCase()}`}
+              value={formData[id as keyof typeof formData]}
+              onChange={handleChange}
+              aria-invalid={!!errors[id as keyof typeof errors]}
+            />
+            {errors[id as keyof typeof errors] && (
+              <p className="text-sm text-red-600">
+                {errors[id as keyof typeof errors]}
+              </p>
+            )}
+          </div>
+        ))}
         <div className="flex justify-end pt-2">
           <Button type="submit" className="gap-2">
             <UserPlus2 className="w-4 h-4" />
-            Create
+            Save & Select
           </Button>
         </div>
       </form>
@@ -263,120 +196,126 @@ export default function CustomerForm() {
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
+    <Card className="w-full border rounded-xl shadow-sm">
+      <CardHeader className="pb-2">
         <CardTitle className="text-base font-semibold flex items-center gap-2">
-          Customer
+          Customer Information
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-5">
-        <div className="space-y-1">
-          <Label htmlFor="cust-search" className="flex items-center gap-2">
-            <Search className="w-4 h-4" />
-            Search or Select Customer
-          </Label>
 
-          <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-            <PopoverTrigger asChild>
-              <Input
-                id="cust-search"
-                placeholder="Type to search..."
-                value={searchValue}
-                onChange={(e) => setSearchValue(e.target.value)}
-                onClick={() => setPopoverOpen(true)}
-                className="cursor-text"
-              />
-            </PopoverTrigger>
-            <PopoverContent className="w-full p-0 max-h-60 overflow-auto">
-              <Command>
-                <CommandInput placeholder="Search customers..." />
-                <CommandList>
-                  <CommandEmpty>No customers found.</CommandEmpty>
-                  <CommandGroup heading="Customers">
-                    {filtered.map((c) => (
-                      <CommandItem
-                        key={c.id}
-                        onSelect={() => {
-                          setCustomer(c.id);
-                          setSelectedCustomerId(c.id);
-                          setPopoverOpen(false);
-                        }}
-                        className="flex flex-col px-1 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
-                      >
-                        <span className="font-medium">{c.name}</span>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-              <div className="border-t px-2 py-1">
+      <CardContent className="space-y-4">
+        {/* Search Input */}
+        <div className="relative">
+          <div className="flex items-center gap-2">
+            <Search className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search customer by name, phone, or email"
+              value={searchValue}
+              onChange={(e) => {
+                setSearchValue(e.target.value);
+                setShowDropdown(true);
+              }}
+              onFocus={() => setShowDropdown(true)}
+              className="pl-9"
+            />
+          </div>
+
+          {/* Dropdown list */}
+          {showDropdown && (
+            <div className="absolute z-20 mt-1 w-full rounded-md border bg-background shadow-md max-h-56 overflow-auto">
+              {filtered.length > 0 ? (
+                filtered.map((c) => (
+                  <button
+                    key={c.id}
+                    onClick={() => handleSelect(c)}
+                    className="w-full text-left px-4 py-2 hover:bg-accent"
+                  >
+                    <div className="font-medium">{c.name}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {c.phone || c.email}
+                    </div>
+                  </button>
+                ))
+              ) : (
+                <div className="px-4 py-3 text-sm text-muted-foreground">
+                  No customers found
+                </div>
+              )}
+              <div className="border-t">
                 <Button
                   variant="ghost"
-                  className="w-full justify-start gap-2"
+                  className="w-full justify-start gap-2 px-4 py-2"
                   onClick={() => {
                     setCreateOpen(true);
-                    setPopoverOpen(false);
+                    setShowDropdown(false);
                   }}
                 >
                   <Plus className="w-4 h-4" />
                   Create New Customer
                 </Button>
               </div>
-            </PopoverContent>
-          </Popover>
+            </div>
+          )}
         </div>
 
-        {selectedCustomer && (
-          <div className="rounded-md border p-4 bg-muted/40 space-y-2">
-            <div className="flex items-center gap-2 text-sm font-medium">
-              <User className="w-4 h-4 text-muted-foreground" />
-              {selectedCustomer.name}
-            </div>
-            {selectedCustomer.email && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Mail className="w-4 h-4" />
-                {selectedCustomer.email}
-              </div>
-            )}
+        {/* Selected customer */}
+        {selectedCustomer ? (
+          <div className="rounded-md border p-4 bg-muted/50 space-y-1 relative">
+            <p className="font-medium text-base">{selectedCustomer.name}</p>
             {selectedCustomer.phone && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Phone className="w-4 h-4" />
-                {selectedCustomer.phone}
-              </div>
+              <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Phone className="w-4 h-4" /> {selectedCustomer.phone}
+              </p>
+            )}
+            {selectedCustomer.email && (
+              <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Mail className="w-4 h-4" /> {selectedCustomer.email}
+              </p>
             )}
             {selectedCustomer.address && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <MapPin className="w-4 h-4" />
-                {selectedCustomer.address}
-              </div>
+              <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                <MapPin className="w-4 h-4" /> {selectedCustomer.address}
+              </p>
             )}
             {selectedCustomer.ice && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Landmark className="w-4 h-4" />
-                ICE: {selectedCustomer.ice}
-              </div>
+              <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Landmark className="w-4 h-4" /> ICE: {selectedCustomer.ice}
+              </p>
             )}
+
+            <Button
+              variant="outline"
+              size="sm"
+              className="absolute top-3 right-3"
+              onClick={() => {
+                setSelectedCustomer(null);
+                setSearchValue("");
+              }}
+            >
+              Change
+            </Button>
+          </div>
+        ) : (
+          <div className="text-center text-sm text-muted-foreground border rounded-md p-4 bg-muted/30">
+            No customer selected
           </div>
         )}
 
+        {/* Create Customer Modal/Drawer */}
         {isDesktop ? (
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
-                <DialogTitle>Create Customer</DialogTitle>
+                <DialogTitle>Create New Customer</DialogTitle>
               </DialogHeader>
               <CustomerCreateForm />
             </DialogContent>
           </Dialog>
         ) : (
-          <Drawer
-            open={createOpen}
-            repositionInputs={false}
-            onOpenChange={setCreateOpen}
-          >
+          <Drawer open={createOpen} onOpenChange={setCreateOpen}>
             <DrawerContent className="p-4">
-              <DrawerHeader className="px-1">
-                <DrawerTitle>Create Customer</DrawerTitle>
+              <DrawerHeader>
+                <DrawerTitle>Create New Customer</DrawerTitle>
               </DrawerHeader>
               <CustomerCreateForm />
             </DrawerContent>

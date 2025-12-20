@@ -1,19 +1,18 @@
 import { useOrderContext } from "@/contexts/orderContext";
 import { Input } from "@/components/ui/input";
-import { ImageOff, Minus, Plus, Trash } from "lucide-react";
+import { Check, ImageOff, Minus, Pencil, Plus, Trash } from "lucide-react";
 import {
   Select,
   SelectContent,
   SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useEffect, useMemo, useState } from "react";
-import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 export default function OrderLine({ product }) {
   const { setOrderItems, setSelectedProducts } = useOrderContext();
@@ -23,6 +22,7 @@ export default function OrderLine({ product }) {
       product.units.map((u) => ({
         name: u.name,
         price: u.price,
+        cost: u.cost,
         quantityInBase: u.quantityInBase,
         id: u.id,
       })),
@@ -31,13 +31,12 @@ export default function OrderLine({ product }) {
 
   const [selectedUnit, setSelectedUnit] = useState(allUnits[0]);
   const [editedUnitName, setEditedUnitName] = useState(allUnits[0].name);
-  const [editingUnitName, setEditingUnitName] = useState(false);
-  const [editingPrice, setEditingPrice] = useState(false);
+  const [isEditingUnitName, setIsEditingUnitName] = useState(false);
+  const [isEditingPrice, setIsEditingPrice] = useState(false);
 
   const [selectedPrice, setSelectedPrice] = useState(product.price);
   const [currentQuantity, setCurrentQuantity] = useState(1);
 
-  // Update line total & profit
   const lineTotal = useMemo(
     () => parseFloat((selectedPrice * currentQuantity).toFixed(2)),
     [selectedPrice, currentQuantity],
@@ -45,11 +44,12 @@ export default function OrderLine({ product }) {
 
   const lineProfit = useMemo(
     () =>
-      parseFloat(((selectedPrice - product.cost) * currentQuantity).toFixed(2)),
-    [selectedPrice, currentQuantity, product.cost],
+      parseFloat(
+        ((selectedPrice - selectedUnit.cost) * currentQuantity).toFixed(2),
+      ),
+    [selectedPrice, currentQuantity, selectedUnit],
   );
 
-  // Sync orderItems whenever price or quantity changes
   useEffect(() => {
     setOrderItems((prev) =>
       prev.map((p) =>
@@ -58,10 +58,10 @@ export default function OrderLine({ product }) {
             ...p,
             unit: selectedUnit.name,
             productUnit: selectedUnit.id ?? null,
-            price: selectedPrice,
+            unitPrice: selectedPrice,
             quantity: currentQuantity,
             totalAmount: lineTotal,
-            unitProfit: selectedPrice - product.cost,
+            unitProfit: selectedPrice - selectedUnit.cost,
             totalProfit: lineProfit,
           }
           : p,
@@ -69,7 +69,6 @@ export default function OrderLine({ product }) {
     );
   }, [selectedPrice, currentQuantity, selectedUnit, lineTotal, lineProfit]);
 
-  // Reset when product changes
   useEffect(() => {
     setSelectedUnit(allUnits[0]);
     setEditedUnitName(allUnits[0].name);
@@ -85,20 +84,6 @@ export default function OrderLine({ product }) {
     setSelectedPrice(unit.price);
   };
 
-  const handleQuantityChange = (e) => {
-    const quantity = parseFloat(e.target.value) || 0;
-    setCurrentQuantity(quantity);
-  };
-
-  const handlePriceChange = (e) => {
-    const newPrice = parseFloat(e.target.value) || 0;
-    setSelectedPrice(newPrice);
-  };
-
-  const handleUnitRename = () => {
-    setSelectedUnit((prev) => ({ ...prev, name: editedUnitName }));
-  };
-
   const deleteItem = () => {
     setSelectedProducts((prev) => prev.filter((p) => p.id !== product.id));
     setOrderItems((prev) => prev.filter((p) => p.productId !== product.id));
@@ -108,126 +93,181 @@ export default function OrderLine({ product }) {
   const decrementQuantity = () =>
     setCurrentQuantity(currentQuantity > 1 ? currentQuantity - 1 : 1);
 
+  const confirmUnitRename = () => {
+    setSelectedUnit((prev) => ({ ...prev, name: editedUnitName }));
+    setIsEditingUnitName(false);
+  };
+
+  const confirmPriceEdit = () => setIsEditingPrice(false);
+
   return (
-    <div className="w-full border rounded-xl p-4 shadow-sm bg-background mb-4">
-      {/* Top section: Image & Info */}
+    <div className="group w-full rounded-xl border bg-card/70 p-5 shadow-sm transition-all hover:shadow-md hover:border-primary/40">
+      {/* HEADER */}
       <div className="flex items-start gap-4 mb-4">
-        <div className="flex-shrink-0">
-          {product.image ? (
-            <img
-              src={`${import.meta.env.VITE_API_URL}${product.image}`}
-              alt={product.name}
-              className="h-16 w-16 object-cover rounded-md"
-            />
-          ) : (
-            <div className="h-16 w-16 flex items-center justify-center bg-muted rounded-md">
-              <ImageOff className="text-muted-foreground" />
-            </div>
-          )}
-        </div>
-        <div className="flex w-full justify-between">
-          <div className="flex flex-col">
-            <span className="font-medium text-sm">{product.name}</span>
-            <span className="text-xs text-muted-foreground">
-              Unit price: {selectedPrice} MAD
-            </span>
+        {product.image ? (
+          <img
+            src={`${import.meta.env.VITE_API_URL}${product.image}`}
+            alt={product.name}
+            className="h-16 w-16 rounded-md object-cover border"
+          />
+        ) : (
+          <div className="h-16 w-16 flex items-center justify-center bg-muted rounded-md border">
+            <ImageOff className="text-muted-foreground h-6 w-6" />
           </div>
-          <div className="flex">
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={deleteItem}
-              className="w-full sm:w-auto flex justify-center"
-            >
-              <Trash className="w-4 h-4" />
-            </Button>
+        )}
+
+        <div className="flex-1 flex justify-between items-start">
+          <div>
+            <h3 className="font-semibold text-sm sm:text-base">
+              {product.name}
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              {selectedUnit.name} • {selectedPrice} MAD
+            </p>
           </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={deleteItem}
+            className="text-muted-foreground hover:text-destructive"
+          >
+            <Trash className="h-4 w-4" />
+          </Button>
         </div>
       </div>
 
-      {/* Unit & Rename */}
-      <div className="grid grid-cols-2 gap-3 mb-3">
-        <div>
-          <Label className="text-xs mb-1 block">Select Unit</Label>
+      {/* UNIT & PRICE SECTION */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-3">
+        {/* UNIT SELECT + INLINE RENAME */}
+        <div className="flex items-center gap-2 w-full sm:w-1/2">
           <Select value={selectedUnit.name} onValueChange={handleUnitChange}>
-            <SelectTrigger className="w-full">
-              <SelectValue>{selectedUnit.name}</SelectValue>
+            <SelectTrigger className="w-full sm:w-40 rounded-lg text-sm">
+              <SelectValue placeholder="Unit" />
             </SelectTrigger>
-            <SelectContent className="w-full">
+            <SelectContent>
               <SelectGroup>
-                <SelectLabel>Units</SelectLabel>
-                {allUnits.map((unit, index) => (
-                  <SelectItem key={unit.name + index} value={unit.name}>
+                {allUnits.map((unit, i) => (
+                  <SelectItem key={unit.name + i} value={unit.name}>
                     {unit.name}
                   </SelectItem>
                 ))}
               </SelectGroup>
             </SelectContent>
           </Select>
-        </div>
 
-        <div>
-          <div className="flex items-center justify-between mb-1">
-            <Label className="text-xs">Rename Unit</Label>
-            <Switch
-              checked={editingUnitName}
-              onCheckedChange={setEditingUnitName}
-            />
-          </div>
-          <Input
-            type="text"
-            disabled={!editingUnitName}
-            value={editedUnitName}
-            onChange={(e) => setEditedUnitName(e.target.value)}
-            onBlur={handleUnitRename}
-            placeholder="Custom unit name"
-          />
-        </div>
-      </div>
-
-      {/* Price & Quantity */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-        <div>
-          <div className="flex items-center justify-between mb-1">
-            <Label className="text-xs">Edit Price</Label>
-            <Switch checked={editingPrice} onCheckedChange={setEditingPrice} />
-          </div>
-          <Input
-            type="number"
-            min={0}
-            value={selectedPrice}
-            onChange={handlePriceChange}
-            disabled={!editingPrice}
-          />
-        </div>
-
-        <div>
-          <Label className="text-xs mb-1 block">Quantity</Label>
-          <div className="flex gap-1 items-center">
-            <Button size="sm" onClick={decrementQuantity}>
-              <Minus />
+          {isEditingUnitName ? (
+            <div className="flex items-center gap-1">
+              <Input
+                className="w-28 h-8 text-sm"
+                value={editedUnitName}
+                onChange={(e) => setEditedUnitName(e.target.value)}
+              />
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={confirmUnitRename}
+                className="h-8 w-8 text-green-600 hover:text-green-700"
+              >
+                <Check className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => setIsEditingUnitName(true)}
+              className="h-8 w-8 text-muted-foreground hover:text-primary"
+              title="Rename Unit"
+            >
+              <Pencil className="h-4 w-4" />
             </Button>
-            <Input
-              type="number"
-              value={currentQuantity}
-              onChange={handleQuantityChange}
-              className="text-center"
-            />
-            <Button size="sm" onClick={incrementQuantity}>
-              <Plus />
-            </Button>
-          </div>
+          )}
+        </div>
+
+        {/* PRICE EDIT */}
+        <div className="flex items-center gap-2 w-full sm:w-1/2 justify-end">
+          {isEditingPrice ? (
+            <div className="flex items-center gap-1">
+              <Input
+                type="number"
+                className="w-28 h-8 text-sm"
+                value={selectedPrice}
+                onChange={(e) =>
+                  setSelectedPrice(parseFloat(e.target.value) || 0)
+                }
+              />
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={confirmPriceEdit}
+                className="h-8 w-8 text-green-600 hover:text-green-700"
+              >
+                <Check className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <div
+              className="flex items-center gap-1 text-sm text-muted-foreground cursor-pointer hover:text-primary transition-colors"
+              onClick={() => setIsEditingPrice(true)}
+            >
+              <span>{selectedPrice.toFixed(2)} MAD</span>
+              <Pencil className="h-4 w-4" />
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Line Total & Profit */}
-      <div className="mt-2 p-2 bg-muted rounded-md text-sm flex justify-between">
-        <span>Line Total:</span>
-        <span>{lineTotal} MAD</span>
+      {/* QUANTITY */}
+      <div className="flex gap-2 items-center justify-start mb-4">
+        <Button
+          size="icon"
+          variant="outline"
+          onClick={decrementQuantity}
+          className="h-8 w-8"
+        >
+          <Minus className="h-4 w-4" />
+        </Button>
+        <Input
+          type="number"
+          value={currentQuantity}
+          onChange={(e) => setCurrentQuantity(parseFloat(e.target.value) || 0)}
+          className="text-center w-16 h-8"
+        />
+        <Button
+          size="icon"
+          variant="outline"
+          onClick={incrementQuantity}
+          className="h-8 w-8"
+        >
+          <Plus className="h-4 w-4" />
+        </Button>
       </div>
-      <div className="mt-1 p-2 bg-muted rounded-md text-sm flex justify-between">
-        <span>Profit:</span>
-        <span>{lineProfit} MAD</span>
+
+      {/* TOTALS */}
+      <div className="mt-3 border-t pt-3">
+        <div className="flex justify-between text-sm text-muted-foreground">
+          <span>
+            {currentQuantity} × {selectedPrice.toFixed(2)} MAD
+          </span>
+          <span className="font-semibold text-foreground">
+            {lineTotal.toFixed(2)} MAD
+          </span>
+        </div>
+
+        <div
+          className={cn(
+            "flex justify-between text-xs mt-1 rounded-md px-2 py-1",
+            lineProfit < 0
+              ? "bg-destructive/10 text-destructive"
+              : "bg-green-100/60 dark:bg-green-900/30 text-green-700 dark:text-green-400",
+          )}
+        >
+          <span>Profit</span>
+          <span>
+            {lineProfit > 0 ? "+" : ""}
+            {lineProfit.toFixed(2)} MAD
+          </span>
+        </div>
       </div>
     </div>
   );
