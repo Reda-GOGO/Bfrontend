@@ -12,6 +12,7 @@ import Orders from "./pages/orders/Orders.tsx";
 import Order from "./pages/orders/Order.tsx";
 import Setting from "./pages/Setting.tsx";
 import Dashboard from "./pages/home/Dashboard.tsx";
+import PrintProductHero from "./pages/pdf/PrintTest.tsx";
 // import { useEffect } from "react";
 
 function App() {
@@ -27,6 +28,7 @@ function App() {
   // }, []);
   return (
     <Routes>
+      <Route path="/pdf/:id" element={<PrintProductHero />} />
       <Route path="/login" element={<Login />} />
       <Route element={<PrivateRoute />}>
         <Route path="/" element={<Layout />}>

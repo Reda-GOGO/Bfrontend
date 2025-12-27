@@ -323,16 +323,16 @@ export function ThemeToggle() {
       {/* Light Icon */}
       <Sun
         className={`h-5 w-5 transition-all duration-300 ${theme === "light"
-            ? "scale-100 rotate-0 opacity-100"
-            : "scale-0 -rotate-90 opacity-0"
+          ? "scale-100 rotate-0 opacity-100"
+          : "scale-0 -rotate-90 opacity-0"
           }`}
       />
 
       {/* Dark Icon */}
       <Moon
         className={`h-5 w-5 transition-all duration-300 absolute ${theme === "dark"
-            ? "scale-100 rotate-0 opacity-100"
-            : "scale-0 rotate-90 opacity-0"
+          ? "scale-100 rotate-0 opacity-100"
+          : "scale-0 rotate-90 opacity-0"
           }`}
       />
     </Button>
@@ -375,16 +375,16 @@ export function FullscreenToggle() {
       {/* Expand icon */}
       <Expand
         className={`h-5 w-5 transition-all duration-300 ${!isFullscreen
-            ? "opacity-100 scale-100 rotate-0"
-            : "opacity-0 scale-0 rotate-90"
+          ? "opacity-100 scale-100 rotate-0"
+          : "opacity-0 scale-0 rotate-90"
           }`}
       />
 
       {/* Minimize icon */}
       <Minimize
         className={`absolute h-5 w-5 transition-all duration-300 ${isFullscreen
-            ? "opacity-100 scale-100 rotate-0"
-            : "opacity-0 scale-0 -rotate-90"
+          ? "opacity-100 scale-100 rotate-0"
+          : "opacity-0 scale-0 -rotate-90"
           }`}
       />
     </Button>
