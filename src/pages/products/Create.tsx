@@ -9,16 +9,16 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 
-function CreateProductAlert() {
-  return (
-    <div className="flex flex-row gap-2">
-      <Button variant="secondary" className="max-sm:w-24 w-full capitalize">
-        discard
-      </Button>
-      <Button className="max-sm:w-24 w-full capitalize">save</Button>
-    </div>
-  );
-}
+// function CreateProductAlert() {
+//   return (
+//     <div className="flex flex-row gap-2">
+//       <Button variant="secondary" className="max-sm:w-24 w-full capitalize">
+//         discard
+//       </Button>
+//       <Button className="max-sm:w-24 w-full capitalize">save</Button>
+//     </div>
+//   );
+// }
 
 export default function Create() {
   const navigate = useNavigate();
