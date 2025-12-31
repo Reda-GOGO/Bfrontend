@@ -19,7 +19,7 @@ export function InventoryProductCard({ product }: { product: Product }) {
   const totalBaseQty = confirmedBaseQty ?? existingBaseQty;
 
   return (
-    <div className="flex flex-col lg:flex-row bg-card rounded-xl border py-3 gap-3">
+    <div className="flex flex-col lg:flex-ro bg-card rounded-xl border py-3 gap-3">
       <ProductCard product={product} />
 
       <Separator orientation="vertical" className="hidden lg:block" />

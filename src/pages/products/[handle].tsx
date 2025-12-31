@@ -76,7 +76,7 @@ export default function ProductOverview() {
   return (
     <Back>
       <div className="sm:p-6 space-y-6">
-        <ProductHeader />
+        <ProductHeader productId={product.handle} />
         <div className="flex w-full gap-2  @max-[612px]:flex-col">
           <ProductHero product={product} />
           <ProductChart />
@@ -192,7 +192,7 @@ export function UnitConversionCard() {
   );
 }
 
-function ProductHeader() {
+function ProductHeader({ productId }) {
   const isMobile = useMediaQuery("(max-width : 767px)");
   const navigate = useNavigate();
   return (
@@ -220,9 +220,8 @@ function ProductHeader() {
         </DropdownMenuContent>
       </DropdownMenu>
       <Button
-        onClick={() => navigate("/products/create")}
+        onClick={() => navigate(`/products/update/${productId}`)}
         size={"sm"}
-        disabled
         className="capitalize"
       >
         update product{" "}

@@ -16,6 +16,7 @@ import PrintProductHero from "./pages/pdf/PrintTest.tsx";
 import Analytics from "./pages/analytics/Analytics.tsx";
 import Teams from "./pages/teams/Teams.tsx";
 import Member from "./pages/teams/Member.tsx";
+import Update from "./pages/products/Update.tsx";
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
           <Route path="/products" element={<Products />} />
           <Route path="/products/:title" element={<Product />} />
           <Route path="/products/create" element={<CreateProduct />} />
+          <Route path="/products/update/:id" element={<Update />} />
           <Route path="/orders" element={<Orders />} />
           <Route path="/orders/:id" element={<Order />} />
           <Route path="/orders/create" element={<CreateOrder />} />
