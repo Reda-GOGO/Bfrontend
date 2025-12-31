@@ -18,8 +18,8 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { Camera, Lock, Mail, Globe, Sparkles } from "lucide-react";
-import avatar from "../../public/avatar.jpeg";
+import { Camera, Lock, Mail, Globe, Sparkles, Settings2 } from "lucide-react";
+import { TitleLayout } from "@/components/shared/title-layout";
 /* Mock user */
 const user = {
   name: "Elena Rodriguez",
@@ -46,206 +46,39 @@ const item = {
   },
 };
 
-import { useRef } from "react";
-import { toPng } from "html-to-image";
-import jsPDF from "jspdf";
-
-function TableWithPDF() {
-  const tableRef = useRef<HTMLDivElement | null>(null);
-
-  const downloadPDF = async () => {
-    const element = tableRef.current;
-    if (!element) return;
-
-    // 1️⃣ Wait for all fonts to load (VERY important)
-    await document.fonts.ready;
-
-    // 2️⃣ Freeze layout to A4 width (96 DPI)
-    const originalWidth = element.style.width;
-    const originalMaxWidth = element.style.maxWidth;
-
-    element.style.width = "794px"; // A4 width @ 96 DPI
-    element.style.maxWidth = "794px";
-
-    // 3️⃣ Generate image with high fidelity
-    const dataUrl = await toPng(element, {
-      cacheBust: true,
-      pixelRatio: 3,
-      style: {
-        transform: "none",
-        animation: "none",
-        transition: "none",
-      },
-    });
-
-    // 4️⃣ Restore original layout
-    element.style.width = originalWidth;
-    element.style.maxWidth = originalMaxWidth;
-
-    // 5️⃣ Create PDF using pixel-friendly units
-    const pdf = new jsPDF({
-      orientation: "p",
-      unit: "pt",
-      format: "a4",
-    });
-
-    const img = new Image();
-    img.src = dataUrl;
-
-    img.onload = () => {
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (img.height * pdfWidth) / img.width;
-
-      pdf.addImage(img, "PNG", 0, 0, pdfWidth, pdfHeight);
-      pdf.save("table.pdf");
-    };
-  };
-
-  return (
-    <>
-      <div ref={tableRef} className="p-4">
-        <ChartBarDefault />
-        <table style={{ width: "100%", tableLayout: "fixed" }}>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Score</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Alice</td>
-              <td>95</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <button onClick={downloadPDF}>Download PDF</button>
-    </>
-  );
-}
-
-export function DownloadPDFButton({ productId }: { productId: number }) {
-  const downloadPDF = async () => {
-    try {
-      const theme = document.documentElement.classList.contains("dark")
-        ? "dark"
-        : "light";
-
-      const response = await fetch("http://localhost:3000/pdf", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ id: productId, theme }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to generate PDF");
-      }
-
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `product-${productId}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error(err);
-      alert("Error generating PDF");
-    }
-  };
-
-  return (
-    <button
-      onClick={downloadPDF}
-      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-    >
-      Download PDF
-    </button>
-  );
-}
-// export default function Setting() {
-//   return <DownloadPDFButton productId={1} />;
-// }
-
-import { TrendingUp } from "lucide-react";
-import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
-
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from "@/components/ui/chart";
-
-export const description = "A bar chart";
-
-const chartData = [
-  { month: "January", desktop: 186 },
-  { month: "February", desktop: 305 },
-  { month: "March", desktop: 237 },
-  { month: "April", desktop: 73 },
-  { month: "May", desktop: 209 },
-  { month: "June", desktop: 214 },
-];
-
-const chartConfig = {
-  desktop: {
-    label: "Desktop",
-    color: "var(--color-blue-500)",
-  },
-} satisfies ChartConfig;
-
-export function ChartBarDefault() {
-  return (
-    <Card className="w-1/2">
-      <CardHeader>
-        <CardTitle>Bar Chart</CardTitle>
-        <CardDescription>January - June 2024</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <ChartContainer className="w-full h-[250px]" config={chartConfig}>
-          <BarChart accessibilityLayer data={chartData}>
-            <CartesianGrid vertical={false} />
-            <XAxis
-              dataKey="month"
-              tickLine={false}
-              tickMargin={10}
-              axisLine={false}
-              tickFormatter={(value) => value.slice(0, 3)}
-            />
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent hideLabel />}
-            />
-            <Bar dataKey="desktop" fill="var(--color-desktop)" radius={8} />
-          </BarChart>
-        </ChartContainer>
-      </CardContent>
-      <CardFooter className="flex-col items-start gap-2 text-sm">
-        <div className="flex gap-2 leading-none font-medium">
-          Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
-        </div>
-        <div className="text-muted-foreground leading-none">
-          Showing total visitors for the last 6 months
-        </div>
-      </CardFooter>
-    </Card>
-  );
-}
 export default function Setting() {
+  return (
+    <div className="flex w-full flex-col">
+      <SettingHeader />
+      <SettingContent />
+    </div>
+  );
+}
+
+function SettingHeader() {
+  return (
+    <div className="flex w-full flex-col gap-4 py-1">
+      <TitleLayout title="Settings" icon={<Settings2 />} />
+      <div className="space-y-1">
+        <h1 className="text-2xl font-semibold tracking-tight">
+          System Settings
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Configure your workspace preferences, API keys, and notification
+          triggers.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function SettingContent() {
   return (
     <motion.main
       variants={container}
       initial="hidden"
       animate="show"
-      className="relative min-h-screen w-full bg-gradient-to-br from-background via-muted/30 to-background px-6 py-16"
+      className="relative min-h-screen w-full  px-6 py-16"
     >
       <div className="mx-auto max-w-6xl space-y-16">
         {/* Identity Hero */}
@@ -258,7 +91,7 @@ export default function Setting() {
           <div className="relative flex flex-col md:flex-row items-center gap-10 p-10">
             <div className="relative group">
               <Avatar className="h-32 w-32 ring-4 ring-background">
-                <AvatarImage src={avatar} />
+                <AvatarImage src="/avatar.jpeg" />
                 <AvatarFallback>ER</AvatarFallback>
               </Avatar>
 
@@ -334,11 +167,11 @@ export default function Setting() {
                 <div className="space-y-2">
                   <Label>Language</Label>
                   <Select defaultValue={user.language}>
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <Globe className="mr-2 h-4 w-4 text-muted-foreground" />
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="w-full">
                       <SelectItem value="en">English</SelectItem>
                       <SelectItem value="fr">Français</SelectItem>
                       <SelectItem value="ar">العربية</SelectItem>

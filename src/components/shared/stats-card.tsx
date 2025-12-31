@@ -24,7 +24,7 @@ export function CardStats({
 export function CardStatsHeader({
   label,
   tooltipContent,
-}: { label: string; tooltipContent: React.ReactNode }) {
+}: { label: string; tooltipContent?: React.ReactNode }) {
   return (
     <div className="flex w-full cursor-pointer">
       <span
@@ -40,11 +40,13 @@ export function CardStatsHeader({
 export function CardStatsHoverCard({
   title,
   content,
-}: { title: string; content: React.ReactNode }) {
+}: { title: string; content?: React.ReactNode }) {
   return (
     <HoverCard>
       <HoverCardTrigger>{title}</HoverCardTrigger>
-      <HoverCardContent className="p-1 flex pt-1">{content}</HoverCardContent>
+      {content && (
+        <HoverCardContent className="p-1 flex pt-1">{content}</HoverCardContent>
+      )}
     </HoverCard>
   );
 }

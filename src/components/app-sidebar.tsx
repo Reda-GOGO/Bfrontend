@@ -1,10 +1,12 @@
 import * as React from "react";
 import {
   AudioWaveform,
+  ChartNoAxesCombined,
   Command,
   Files,
   Frame,
   GalleryVerticalEnd,
+  KeyRound,
   Layers2,
   LayoutDashboard,
   Map,
@@ -113,30 +115,40 @@ const data = {
     },
     {
       title: "Inventory",
-      url: "#",
+      url: "/inventory",
       icon: Layers2,
       // isActive: true,
     },
     {
-      title: "Invoice",
-      url: "/invoice",
-      icon: Files,
-      // isActive: true,
+      title: "Analytics",
+      url: "/analytics",
+      icon: ChartNoAxesCombined,
     },
+    // {
+    //   title: "Invoice",
+    //   url: "/invoice",
+    //   icon: Files,
+    //   // isActive: true,
+    // },
     {
       title: "Settings",
-      url: "#",
+      url: "/setting",
       icon: Settings2,
-      items: [
-        {
-          title: "General",
-          url: "/setting",
-        },
-        {
-          title: "Team",
-          url: "#",
-        },
-      ],
+      // items: [
+      //   {
+      //     title: "General",
+      //     url: "/setting",
+      //   },
+      //   {
+      //     title: "Team",
+      //     url: "#",
+      //   },
+      // ],
+    },
+    {
+      title: "Team & Permission",
+      url: "/teams",
+      icon: KeyRound,
     },
   ],
   projects: [

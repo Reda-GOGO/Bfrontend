@@ -43,320 +43,182 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { TitleLayout } from "@/components/shared/title-layout";
+import OrdersFilters from "@/components/own/orders/OrdersFilters";
+import { OrdersHeader } from "@/components/own/orders/OrdersHeader";
+import OrdersPagination from "@/components/own/orders/OrdersPagination";
+import {
+  useOrders,
+  useOrdersSelection,
+} from "@/application/orders/hooks/useOrders";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { OrdersTable } from "@/components/own/orders/OrdersTables";
+import type { Order } from "@/types";
+import OrdersCards from "@/components/own/orders/OrdersCards";
 
 // Order type definitions with icon + label
-const ORDER_TYPES = [
+export const ORDER_TYPES = [
   {
     label: "Invoice",
     value: "invoice",
-    icon: <FileText className="w-4 h-4 text-blue-500" />,
+    icon: <FileText className="h-3.5 w-3.5" />,
   },
   {
     label: "Purchase Order",
     value: "purchase",
-    icon: <ClipboardList className="w-4 h-4 text-indigo-500" />,
+    icon: <ClipboardList className="h-3.5 w-3.5" />,
   },
   {
     label: "Delivery Order",
     value: "delivery",
-    icon: <Truck className="w-4 h-4 text-green-500" />,
+    icon: <Truck className="h-3.5 w-3.5" />,
   },
   {
     label: "Estimate",
     value: "estimate",
-    icon: <FileSignature className="w-4 h-4 text-yellow-600" />,
+    icon: <FileSignature className="h-3.5 w-3.5" />,
   },
 ];
 
 // Status definitions with icon + label + color class
-const STATUSES = [
+export const STATUSES = [
   {
     label: "Pending",
     value: "pending",
-    icon: <Hourglass className="w-4 h-4 text-yellow-500" />,
-    color: "text-yellow-600 bg-yellow-50 border-yellow-200",
+    icon: <Hourglass className="h-3.5 w-3.5" />,
+    variant: "secondary",
   },
   {
     label: "Partially Paid",
     value: "partially_paid",
-    icon: <DollarSign className="w-4 h-4 text-blue-500" />,
-    color: "text-blue-600 bg-blue-50 border-blue-200",
+    icon: <DollarSign className="h-3.5 w-3.5" />,
+    variant: "outline",
   },
   {
     label: "Paid",
     value: "paid",
-    icon: <BadgeCheck className="w-4 h-4 text-green-600" />,
-    color: "text-green-600 bg-green-50 border-green-200",
+    icon: <BadgeCheck className="h-3.5 w-3.5" />,
+    variant: "default",
   },
   {
     label: "Canceled",
     value: "canceled",
-    icon: <CircleSlash className="w-4 h-4 text-red-600" />,
-    color: "text-red-600 bg-red-50 border-red-200",
+    icon: <CircleSlash className="h-3.5 w-3.5" />,
+    variant: "destructive",
   },
 ];
 
-interface Customer {
-  name: string;
-  ice: string;
-}
-
-interface OrderItem {
-  id: string | number;
-  status: string;
-  type: string;
-  totalAmount: number;
-  customer: Customer;
-  createdAt: Date;
-}
-
-interface OrdersResponse {
-  orders: OrderItem[];
-}
+const TABS_COLUMNS = ["all", "active", "archived"];
 
 export default function OrderPage() {
-  const navigate = useNavigate();
+  const {
+    orders,
+    search,
+    setSearch,
+    selected,
+    setSelected,
+    paginationControl,
+    pagination,
+  } = useOrders();
 
-  const [ordersResponse, setOrdersResponse] = useState<OrdersResponse | null>(
-    null,
-  );
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState<string>("");
-
-  // Fetch orders
-  useEffect(() => {
-    const getOrders = async () => {
-      try {
-        setIsLoading(true);
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/orders`);
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-        const data = (await res.json()) as OrdersResponse;
-        setOrdersResponse(data);
-      } catch (err: any) {
-        console.error("Failed fetching orders:", err);
-        setError(err.message || "Unknown error");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    getOrders();
-  }, []);
-
-  const handleCreate = (e: React.MouseEvent) => {
-    e.preventDefault();
-    navigate("/orders/create");
-  };
-
-  // Filter orders based on search
-  const filteredOrders = ordersResponse?.orders.filter((o) => {
-    if (!searchTerm) return true;
-    const term = searchTerm.toLowerCase();
-    return (
-      o.id.toString().includes(term) ||
-      o.status.toLowerCase().includes(term) ||
-      o.type.toLowerCase().includes(term) ||
-      o.customer.name.toLowerCase().includes(term) ||
-      o.customer.ice.toLowerCase().includes(term)
-    );
-  });
+  const {
+    selectedSize,
+    handleSelection,
+    isItemSelected,
+    handleAllSelection,
+    isAllItemsSelected,
+  } = useOrdersSelection({ selected, setSelected });
 
   return (
-    <div className="flex flex-col w-full h-full py-6  space-y-6">
-      {/* order info section  */}
-      {/* <OrderInfoCard */}
-      {/*   loading={false} */}
-      {/*   stats={{ */}
-      {/*     revenueToday: 12800, */}
-      {/*     totalOrders: 54, */}
-      {/*     averageOrderValue: 237, */}
-      {/*     revenueLast7Days: [ */}
-      {/*       { day: "Mon", revenue: 8200 }, */}
-      {/*       { day: "Tue", revenue: 6400 }, */}
-      {/*       { day: "Wed", revenue: 9100 }, */}
-      {/*       { day: "Thu", revenue: 7300 }, */}
-      {/*       { day: "Fri", revenue: 10200 }, */}
-      {/*       { day: "Sat", revenue: 9400 }, */}
-      {/*       { day: "Sun", revenue: 8800 }, */}
-      {/*     ], */}
-      {/*   }} */}
-      {/* /> */}
-      {/* --- Top Bar: Search + Buttons */}
-      {/* <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4"> */}
-      {/*   <div className="relative w-full md:w-1/2"> */}
-      {/*     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" /> */}
-      {/*     <Input */}
-      {/*       type="text" */}
-      {/*       placeholder="Search orders by ID, customer or ICE..." */}
-      {/*       className="pl-10 pr-4" */}
-      {/*       value={searchTerm} */}
-      {/*       onChange={(e) => setSearchTerm(e.target.value)} */}
-      {/*     /> */}
-      {/*   </div> */}
-      {/*   <div className="flex flex-wrap gap-2 justify-end"> */}
-      {/*     <Button */}
-      {/*       onClick={handleCreate} */}
-      {/*       size="sm" */}
-      {/*       className="flex items-center gap-1" */}
-      {/*     > */}
-      {/*       <FileSignature className="w-4 h-4" /> */}
-      {/*       Create Order */}
-      {/*     </Button> */}
-      {/*     <Button size="sm" variant="outline"> */}
-      {/*       More Actions */}
-      {/*     </Button> */}
-      {/*   </div> */}
-      {/* </div> */}
+    <div className="flex flex-col w-full h-full py-1 ">
       <OrdersHeader />
-      {/* --- Table / States */}
-      <div className="w-full overflow-x-auto border rounded-lg">
-        {isLoading ? (
-          <div className="w-full flex justify-center py-16">
-            <span className="text-muted-foreground">Loading orders...</span>
-          </div>
-        ) : error ? (
-          <div className="w-full flex justify-center py-16 text-red-500">
-            <span>Error loading orders: {error}</span>
-          </div>
-        ) : !filteredOrders || filteredOrders.length === 0 ? (
-          <div className="w-full flex justify-center py-16 text-muted-foreground">
-            <span>No orders found.</span>
-          </div>
-        ) : (
-          <Table>
-            <TableHeader className="bg-muted sticky top-0 z-10">
-              <TableRow className="text-sm text-muted-foreground">
-                <TableHead>
-                  <Checkbox />
-                </TableHead>
-                <TableHead>
-                  <div className="flex group h-full w-full items-center gap-2">
-                    <span>Order ID</span>
-                    <ArrowDownUp className="w-4 h-4 group-hover:visible invisible" />
-                  </div>
-                </TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Total Amount</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Creation Date</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredOrders.map((order, idx) => {
-                const statusDef = STATUSES.find(
-                  (s) => s.value === order.status,
-                );
-                const typeDef = ORDER_TYPES.find((t) => t.value === order.type);
 
-                return (
-                  <TableRow
-                    onClick={() => navigate(`/orders/${order.id}`)}
-                    key={idx}
-                    className="hover:bg-muted/50 transition-colors"
-                  >
-                    <TableCell>
-                      <Checkbox />
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      #order {order.id}
-                    </TableCell>
-                    <TableCell>
-                      {statusDef ? (
-                        <Badge
-                          variant={"outline"}
-                          className={`inline-flex items-center gap-1 px-2 py-1 rounded border text-muted-foreground `}
-                        >
-                          {statusDef.icon}
-                          {statusDef.label}
-                        </Badge>
-                      ) : (
-                        <span className="capitalize">{order.status}</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {typeDef ? (
-                        <Badge
-                          variant={"outline"}
-                          className="inline-flex items-center gap-1 px-2 py-1 rounded  text-muted-foreground "
-                        >
-                          {typeDef.icon}
-                          {typeDef.label}
-                        </Badge>
-                      ) : (
-                        <span className="capitalize">{order.type}</span>
-                      )}
-                    </TableCell>
-                    <TableCell>{order.totalAmount.toFixed(2)} MAD</TableCell>
-                    <TableCell>
-                      <div className="flex items-start gap-2">
-                        <User className="w-5 h-5 text-muted-foreground" />
-                        <div className="flex flex-col text-sm">
-                          <span className="font-medium">
-                            {order.customer.name}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            ICE: {order.customer.ice}
-                          </span>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {new Date(order.createdAt).toLocaleDateString()}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        )}
-      </div>
+      <OrdersContent
+        search={search}
+        setSearch={setSearch}
+        orders={orders}
+        handleSelection={handleSelection}
+        isItemSelected={isItemSelected}
+        handleAllSelection={handleAllSelection}
+        isAllItemsSelected={isAllItemsSelected}
+      />
+
+      <OrdersPagination
+        paginationControl={paginationControl}
+        pagination={pagination}
+        selectedSize={selectedSize}
+      />
     </div>
   );
 }
-
-export function OrdersHeader() {
-  const isMobile = useMediaQuery("(max-width: 767px)");
-  const navigate = useNavigate();
+function OrdersContent({
+  search,
+  setSearch,
+  orders,
+  handleSelection,
+  isItemSelected,
+  handleAllSelection,
+  isAllItemsSelected,
+}: {
+  search: string;
+  setSearch: (search: string) => void;
+  orders: Order[];
+  handleSelection: (id: number) => void;
+  isItemSelected: (id: number) => boolean;
+  handleAllSelection: (items: Order[]) => void;
+  isAllItemsSelected: (items: Order[]) => boolean;
+}) {
   return (
-    <div className="w-full flex flex-col ">
-      <div className="flex w-full justify-between gap-2 py-2">
-        <TitleLayout title="Orders" icon={<ShoppingCart />} />
-        <div className="flex gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant={"outline"} size={"sm"} className="capitalize">
-                {isMobile ? (
-                  <EllipsisVertical />
-                ) : (
-                  <>
-                    more actions
-                    <ChevronDown />
-                  </>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Profile</DropdownMenuItem>
-              <DropdownMenuItem>Billing</DropdownMenuItem>
-              <DropdownMenuItem>Team</DropdownMenuItem>
-              <DropdownMenuItem>Subscription</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button
-            onClick={() => navigate("/orders/create")}
-            size={"sm"}
-            className="capitalize"
-          >
-            create order{" "}
-          </Button>
-        </div>
-      </div>
-      <OrderInfoCard />
-    </div>
+    <Tabs defaultValue="all" className="w-full">
+      <OrdersFilters search={search} setSearch={setSearch} />
+
+      {TABS_COLUMNS.map((tab) => (
+        <TabsContent key={tab} value={tab}>
+          <OrderGrid
+            orders={orders}
+            handleSelection={handleSelection}
+            isItemSelected={isItemSelected}
+            handleAllSelection={handleAllSelection}
+            isAllItemsSelected={isAllItemsSelected}
+          />
+        </TabsContent>
+      ))}
+    </Tabs>
+  );
+}
+
+function OrderGrid({
+  orders,
+  handleSelection,
+  isItemSelected,
+  handleAllSelection,
+  isAllItemsSelected,
+}: {
+  orders: Order[];
+  handleSelection: (id: number) => void;
+  isItemSelected: (id: number) => boolean;
+  handleAllSelection: (items: Order[]) => void;
+  isAllItemsSelected: (items: Order[]) => boolean;
+}) {
+  const isMobile = useMediaQuery("(max-width: 767px)");
+  return (
+    <>
+      {isMobile ? (
+        <OrdersCards
+          orders={orders}
+          handleSelection={handleSelection}
+          isItemSelected={isItemSelected}
+          handleAllSelection={handleAllSelection}
+          isAllItemsSelected={isAllItemsSelected}
+        />
+      ) : (
+        <OrdersTable
+          orders={orders}
+          handleSelection={handleSelection}
+          isItemSelected={isItemSelected}
+          handleAllSelection={handleAllSelection}
+          isAllItemsSelected={isAllItemsSelected}
+        />
+      )}
+    </>
   );
 }

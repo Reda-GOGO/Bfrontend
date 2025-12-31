@@ -1,7 +1,7 @@
 import { Route, Routes } from "react-router";
 import { Layout } from "./components/app-sidebar";
 import Login from "./pages/Login";
-import Inventory from "./pages/Inventory";
+import Inventory from "./pages/inventory/Inventory.tsx";
 import Products from "./pages/products/Products";
 import Product from "./pages/products/[handle]";
 import Invoice from "./pages/Invoice";
@@ -13,19 +13,11 @@ import Order from "./pages/orders/Order.tsx";
 import Setting from "./pages/Setting.tsx";
 import Dashboard from "./pages/home/Dashboard.tsx";
 import PrintProductHero from "./pages/pdf/PrintTest.tsx";
-// import { useEffect } from "react";
+import Analytics from "./pages/analytics/Analytics.tsx";
+import Teams from "./pages/teams/Teams.tsx";
+import Member from "./pages/teams/Member.tsx";
 
 function App() {
-  // useEffect(() => {
-  //   const handler = () => {
-  //     if (!document.fullscreenElement) {
-  //       document.documentElement.requestFullscreen().catch(() => { });
-  //     }
-  //     window.removeEventListener("click", handler);
-  //   };
-  //
-  //   window.addEventListener("click", handler);
-  // }, []);
   return (
     <Routes>
       <Route path="/pdf/:id" element={<PrintProductHero />} />
@@ -42,6 +34,9 @@ function App() {
           <Route path="/orders/create" element={<CreateOrder />} />
           <Route path="/invoice" element={<Invoice />} />
           <Route path="/inventory" element={<Inventory />} />
+          <Route path="/analytics" element={<Analytics />} />
+          <Route path="/teams" element={<Teams />} />
+          <Route path="/teams/member" element={<Member />} />
           <Route path="/setting" element={<Setting />} />
         </Route>
       </Route>

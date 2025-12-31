@@ -1,26 +1,24 @@
+import { TitleLayout } from "@/components/shared/title-layout";
 import { Button } from "@/components/ui/button";
 import {
+  DropdownMenuTrigger,
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { Separator } from "@/components/ui/separator";
 import useMediaQuery from "@/hooks/useMediaQuery";
-import { ChevronDown, EllipsisVertical, Package } from "lucide-react";
-import ProductsStats from "./ProductsStats";
+import { ChevronDown, EllipsisVertical, ShoppingCart } from "lucide-react";
 import { useNavigate } from "react-router";
-import { TitleLayout } from "@/components/shared/title-layout";
-
-export default function ProductsHeader() {
+import OrderInfoCard from "./OrderInfoCard";
+export function OrdersHeader() {
   const isMobile = useMediaQuery("(max-width: 767px)");
   const navigate = useNavigate();
   return (
     <div className="w-full flex flex-col ">
       <div className="flex w-full justify-between gap-2 py-2">
-        <TitleLayout title="Products" icon={<Package />} />
+        <TitleLayout title="Orders" icon={<ShoppingCart />} />
         <div className="flex gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -45,23 +43,23 @@ export default function ProductsHeader() {
             </DropdownMenuContent>
           </DropdownMenu>
           <Button
-            onClick={() => navigate("/products/create")}
+            onClick={() => navigate("/orders/create")}
             size={"sm"}
             className="capitalize"
           >
-            create product{" "}
+            create order{" "}
           </Button>
         </div>
       </div>
       <div className="space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight">
-          Product Catalog
+          Order Management
         </h1>
         <p className="text-sm text-muted-foreground">
-          Create, edit, and manage your product listings and their visibility.
+          Track customer purchases, fulfillment status, and transaction history.
         </p>
       </div>
-      <ProductsStats />
+      <OrderInfoCard />
     </div>
   );
 }

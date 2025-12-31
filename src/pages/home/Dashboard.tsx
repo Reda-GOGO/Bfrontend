@@ -50,7 +50,15 @@ export function DashboardHeader() {
         title="Dashboard"
         icon={<LayoutDashboard className="text-primary" />}
       />
-
+      <div className="space-y-1">
+        <h1 className="text-2xl font-semibold tracking-tight">
+          Dashboard Overview
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          A real-time snapshot of your business performance, sales, and active
+          visitors.
+        </p>
+      </div>
       {/* Current day + Date range picker */}
       <div className="flex max-sm:flex-col sm:items-center gap-4">
         {/* Current day */}
