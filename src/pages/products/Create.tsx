@@ -7,6 +7,7 @@ import SellingUnitsCard from "@/components/own/products/SellingUnitsCard";
 import VendorCard from "@/components/own/products/VendorCard";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { useNavigate } from "react-router";
 
 function CreateProductAlert() {
   return (
@@ -20,6 +21,7 @@ function CreateProductAlert() {
 }
 
 export default function Create() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: "",
     handle: "",
@@ -84,6 +86,7 @@ export default function Create() {
       });
 
       const data = await res.json();
+      navigate("/products");
       console.log("Saved product:", data);
     } catch (err) {
       console.error("Error saving product:", err);

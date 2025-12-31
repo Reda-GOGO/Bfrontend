@@ -156,13 +156,14 @@ export default function Update() {
           <InventoryCard formData={formData} setFormData={setFormData} />
           <VendorCard formData={formData} setFormData={setFormData} />
         </div>
-      </form>
 
-      <div className="w-full flex max-sm:justify-center justify-end sm:pr-24">
-        <Button type="submit" className="mt-6 w-[220px]">
-          Update Product
-        </Button>
-      </div>
+        {/* ✅ BUTTON MUST BE INSIDE FORM */}
+        <div className="lg:col-span-3 w-full flex max-sm:justify-center justify-end sm:pr-24">
+          <Button type="submit" className="mt-6 w-[220px]">
+            Update Product
+          </Button>
+        </div>
+      </form>
     </Back>
   );
 }
