@@ -87,6 +87,8 @@ export type ProductUnit = {
   quantityInBase: number; // e.g., 25 (means 1 packet = 25kg)
   isBase: boolean;
   price: number;
+  defaultValue: number;
+  variantValue: number;
   cost: number;
   createdAt: Date;
   updatedAt?: Date | null;

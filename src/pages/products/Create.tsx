@@ -1,3 +1,5 @@
+import { productApi } from "@/application/products/api/product.api";
+import useProduct from "@/application/products/hooks/useProduct";
 import Back from "@/components/own/Back";
 import BasicInfoCard from "@/components/own/products/BasicInfoCard";
 import InventoryCard from "@/components/own/products/InventoryCard";
@@ -6,6 +8,7 @@ import PricingCard from "@/components/own/products/PricingCard";
 import SellingUnitsCard from "@/components/own/products/SellingUnitsCard";
 import VendorCard from "@/components/own/products/VendorCard";
 import { Button } from "@/components/ui/button";
+import type { ProductUnit } from "@/types";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 
@@ -20,109 +23,71 @@ import { useNavigate } from "react-router";
 //   );
 // }
 
+import { toast } from "sonner";
+
 export default function Create() {
+  const { product, setProduct, initialProductState } = useProduct();
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    title: "",
-    handle: "",
-    description: "",
-    price: 1,
-    cost: 0,
-    profit: 0,
-    margin: 0,
-    baseUnit: { name: "", price: "" },
-    units: [] as { name: string; price: string; conversion: string }[],
-    inventory: { unit: "", quantity: "" },
-    vendor: { name: "", contact: "" },
-    image: null as File | null,
-    imagePreview: "",
-  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const form = new FormData();
-
-    // append file (multer will pick this up as req.file)
-    if (formData.image) {
-      form.append("image", formData.image);
-    }
-
-    // append product fields
-    form.append("name", formData.title);
-    form.append("handle", formData.handle);
-    form.append("description", formData.description);
-    form.append("cost", String(formData.cost));
-    form.append("price", String(formData.price));
-    form.append("unit", formData.baseUnit.name);
-    form.append("vendorName", formData.vendor.name);
-    form.append("vendorContact", formData.vendor.contact);
-
-    // append units (array → JSON string)
-    form.append(
-      "units",
-      JSON.stringify(
-        formData.units.map((u) => ({
-          name: u.name,
-          price: Number(u.price),
-          quantityInBase: Number(u.conversion),
-        })),
-      ),
-    );
-
-    // append inventory
-    form.append(
-      "inventory",
-      JSON.stringify({
-        unit: formData.inventory.unit,
-        quantity: Number(formData.inventory.quantity),
-      }),
-    );
-
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/product`, {
-        method: "POST",
-        body: form,
-      });
+      const formData = new FormData();
 
-      const data = await res.json();
+      // primitive fields
+      formData.append("name", product.name);
+      formData.append("handle", product.handle);
+      formData.append("description", product.description || "");
+      formData.append("cost", String(product.cost));
+      formData.append("price", String(product.price));
+      formData.append("unit", product.unit);
+      formData.append("vendorName", product.vendorName || "");
+      formData.append("vendorContact", product.vendorContact || "");
+      formData.append("availableQty", String(product.availableQty || 0));
+
+      // 🔥 units MUST be stringified
+      formData.append("units", JSON.stringify(product.units || []));
+
+      // optional image
+      if (product.image instanceof File) {
+        formData.append("image", product.image);
+      }
+
+      await productApi.createProduct(formData);
+
+      toast.success("Product created successfully");
       navigate("/products");
-      console.log("Saved product:", data);
-    } catch (err) {
-      console.error("Error saving product:", err);
+      setProduct(initialProductState);
+    } catch (error) {
+      console.error("Create product error:", error);
+      toast.error("Failed to create product");
     }
   };
 
   return (
-    <>
-      <Back>
-        <form
-          onSubmit={(e) => handleSubmit(e)}
-          className="lg:grid lg:grid-cols-3 w-full gap-4 xl:px-46"
-        >
-          <div className="lg:col-span-2 flex flex-col gap-2">
-            <BasicInfoCard formData={formData} setFormData={setFormData} />
-            <PricingCard formData={formData} setFormData={setFormData} />
-            <SellingUnitsCard formData={formData} setFormData={setFormData} />
-          </div>
+    <Back>
+      <form
+        onSubmit={handleSubmit}
+        className="lg:grid lg:grid-cols-3 w-full gap-4 xl:px-46"
+      >
+        <div className="lg:col-span-2 flex flex-col gap-2">
+          <BasicInfoCard product={product} setProduct={setProduct} />
+          <PricingCard product={product} setProduct={setProduct} />
+        </div>
 
-          <div className="lg:col-span-1 max-lg:py-4 flex flex-col gap-2">
-            <MediaCard formData={formData} setFormData={setFormData} />
-            <InventoryCard formData={formData} setFormData={setFormData} />
-            <VendorCard formData={formData} setFormData={setFormData} />
-          </div>
-        </form>
+        <div className="lg:col-span-1 max-lg:py-4 flex flex-col gap-2">
+          <MediaCard product={product} setProduct={setProduct} />
+          <InventoryCard product={product} setProduct={setProduct} />
+          <VendorCard product={product} setProduct={setProduct} />
+        </div>
 
-        <div className="w-full flex max-sm:justify-center justify-end sm:pr-24 items-center">
-          <Button
-            type="submit"
-            className="mt-6 w-[220px]"
-            onClick={(e) => handleSubmit(e)}
-          >
+        <div className="lg:col-span-3 w-full flex justify-end sm:pr-24">
+          <Button type="submit" className="mt-6 w-[220px]">
             Save Product
           </Button>
         </div>
-      </Back>
-    </>
+      </form>
+    </Back>
   );
 }

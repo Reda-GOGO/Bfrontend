@@ -1,21 +1,36 @@
-import { BookImage, CirclePlus, Trash2 } from "lucide-react";
+import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ImageIcon, Upload, Trash2 } from "lucide-react";
+import type { Product } from "@/types"; // adjust path if needed
 
-export default function MediaCard({ formData, setFormData }: any) {
+type Props = {
+  product?: Product; // ✅ optional
+  setProduct: React.Dispatch<React.SetStateAction<Product>>;
+};
+
+export default function MediaCard({ product, setProduct }: Props) {
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    console.log("file : ", file);
-    if (file) {
-      const preview = URL.createObjectURL(file);
-      setFormData((prev: any) => ({
-        ...prev,
-        image: file,
-        imagePreview: preview,
-      }));
-    }
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const preview = URL.createObjectURL(file);
+
+    setProduct((prev) => ({
+      ...prev,
+      image: preview,
+    }));
+  };
+
+  const removeImage = () => {
+    setProduct((prev) => ({
+      ...prev,
+      image: null,
+    }));
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   return (
@@ -23,38 +38,55 @@ export default function MediaCard({ formData, setFormData }: any) {
       <CardHeader>
         <CardTitle>Media</CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-col gap-2 items-center px-6">
+
+      <CardContent className="flex flex-col items-center gap-6 py-8">
         <Input
-          id="imageInput"
+          ref={fileInputRef}
           type="file"
           accept="image/*"
           className="hidden"
           onChange={handleFileChange}
         />
-        {formData.imagePreview ? (
-          <div className="flex flex-col items-center gap-2">
+
+        {/* ================= SAFE RENDER ================= */}
+        {product?.image ? (
+          <div className="group relative">
             <img
-              src={formData.imagePreview}
-              alt="Preview"
-              className="w-40 h-40 object-cover rounded-full border"
+              src={`${import.meta.env.VITE_API_URL + product.image}`}
+              alt="Product image"
+              className="h-44 w-44 rounded-xl border object-cover"
             />
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => document.getElementById("imageInput")?.click()}
-            >
-              Change Image
-            </Button>
+
+            <div className="absolute inset-0 flex items-center justify-center gap-2 rounded-xl bg-black/40 opacity-0 transition group-hover:opacity-100">
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                Replace
+              </Button>
+
+              <Button
+                type="button"
+                size="sm"
+                variant="destructive"
+                onClick={removeImage}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         ) : (
-          <Label>
-            <div
-              onClick={() => document.getElementById("imageInput")?.click()}
-              className="w-40 rounded-full bg-secondary dark:bg-background h-40 flex items-center justify-center"
-            >
-              <BookImage />
-            </div>
-          </Label>
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="flex h-44 w-44 flex-col items-center justify-center gap-2 rounded-xl border border-dashed bg-muted/40 text-muted-foreground transition hover:bg-muted"
+          >
+            <ImageIcon className="h-8 w-8" />
+            <span className="text-xs font-medium">Upload image</span>
+          </button>
         )}
       </CardContent>
     </Card>

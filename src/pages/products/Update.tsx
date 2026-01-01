@@ -8,136 +8,71 @@ import MediaCard from "@/components/own/products/MediaCard";
 import BasicInfoCard from "@/components/own/products/BasicInfoCard";
 import PricingCard from "@/components/own/products/PricingCard";
 import SellingUnitsCard from "@/components/own/products/SellingUnitsCard";
-import { useParams } from "react-router";
 
-export default function Update() {
-  const { id } = useParams<{ id: string }>();
+import { useParams, useNavigate } from "react-router";
+import { toast } from "sonner";
+import { productApi } from "@/application/products/api/product.api";
+import useProduct from "@/application/products/hooks/useProduct";
 
-  const [product, setProduct] = useState<Product | null>(null);
-  const [loading, setLoading] = useState(true);
+export default function UpdateProduct() {
+  const { handle } = useParams<{ handle: string }>();
+  const navigate = useNavigate();
+  const { product, setProduct } = useProduct();
 
-  const [formData, setFormData] = useState({
-    title: "",
-    handle: "",
-    description: "",
-    price: 1,
-    cost: 0,
-    profit: 0,
-    margin: 0,
-    baseUnit: { name: "", price: "" },
-    units: [] as { name: string; price: string; conversion: string }[],
-    inventory: { unit: "", quantity: "" },
-    vendor: { name: "", contact: "" },
-    image: null as File | null,
-    imagePreview: "",
-  });
-
-  // 🔹 Fetch product
+  // Load product data by handle
   useEffect(() => {
-    if (!id) return;
+    if (!handle) return;
 
     const fetchProduct = async () => {
       try {
-        const res = await fetch(
-          `${import.meta.env.VITE_API_URL}/product/${id}`,
-        );
-        const data: Product = await res.json();
-
+        const data = await productApi.getProduct(handle);
         setProduct(data);
-
-        // 🔹 Prefill form
-        setFormData({
-          title: data.name,
-          handle: data.handle,
-          description: data.description ?? "",
-          price: data.price,
-          cost: data.cost,
-          profit: data.price - data.cost,
-          margin:
-            data.price > 0 ? ((data.price - data.cost) / data.price) * 100 : 0,
-
-          baseUnit: {
-            name: data.unit,
-            price: String(
-              data.units.find((u) => u.name === data.unit)?.price ?? "",
-            ),
-          },
-
-          units: data.units.map((u) => ({
-            name: u.name,
-            price: String(u.price),
-            conversion: String(u.quantityInBase),
-          })),
-
-          inventory: {
-            unit: data.unit,
-            quantity: String(data.availableQty ?? 0),
-          },
-
-          vendor: {
-            name: data.vendorName ?? "",
-            contact: data.vendorContact ?? "",
-          },
-
-          image: null,
-          imagePreview: data.image ?? "",
-        });
-      } catch (err) {
-        console.error("Failed to load product", err);
-      } finally {
-        setLoading(false);
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to fetch product");
       }
     };
 
     fetchProduct();
-  }, [id]);
+  }, [handle, setProduct]);
 
+  if (!product) return <p>Loading...</p>;
+
+  // Handle form submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!id) return;
 
-    const form = new FormData();
+    try {
+      const formData = new FormData();
 
-    if (formData.image) {
-      form.append("image", formData.image);
+      // primitive fields
+      formData.append("name", product.name);
+      formData.append("handle", product.handle);
+      formData.append("description", product.description || "");
+      formData.append("cost", String(product.cost));
+      formData.append("price", String(product.price));
+      formData.append("unit", product.unit);
+      formData.append("vendorName", product.vendorName || "");
+      formData.append("vendorContact", product.vendorContact || "");
+      formData.append("availableQty", String(product.availableQty || 0));
+
+      // 🔥 units MUST be stringified
+      formData.append("units", JSON.stringify(product.units || []));
+
+      // optional image
+      if (product.image instanceof File) {
+        formData.append("image", product.image);
+      }
+
+      await productApi.updateProduct(handle, formData);
+
+      toast.success("Product updated successfully");
+      navigate("/products");
+    } catch (error) {
+      console.error("Update product error:", error);
+      toast.error("Failed to update product");
     }
-
-    form.append("name", formData.title);
-    form.append("handle", formData.handle);
-    form.append("description", formData.description);
-    form.append("cost", String(formData.cost));
-    form.append("price", String(formData.price));
-    form.append("unit", formData.baseUnit.name);
-    form.append("vendorName", formData.vendor.name);
-    form.append("vendorContact", formData.vendor.contact);
-
-    form.append(
-      "units",
-      JSON.stringify(
-        formData.units.map((u) => ({
-          name: u.name,
-          price: Number(u.price),
-          quantityInBase: Number(u.conversion),
-        })),
-      ),
-    );
-
-    form.append(
-      "inventory",
-      JSON.stringify({
-        unit: formData.inventory.unit,
-        quantity: Number(formData.inventory.quantity),
-      }),
-    );
-
-    await fetch(`${import.meta.env.VITE_API_URL}/product/${id}`, {
-      method: "PUT",
-      body: form,
-    });
   };
-
-  if (loading) return <p>Loading…</p>;
-  if (!product) return <p>Product not found</p>;
 
   return (
     <Back>
@@ -145,20 +80,21 @@ export default function Update() {
         onSubmit={handleSubmit}
         className="lg:grid lg:grid-cols-3 w-full gap-4 xl:px-46"
       >
+        {/* Left Column: Basic info + pricing + variants */}
         <div className="lg:col-span-2 flex flex-col gap-2">
-          <BasicInfoCard formData={formData} setFormData={setFormData} />
-          <PricingCard formData={formData} setFormData={setFormData} />
-          <SellingUnitsCard formData={formData} setFormData={setFormData} />
+          <BasicInfoCard product={product} setProduct={setProduct} />
+          <PricingCard product={product} setProduct={setProduct} />
         </div>
 
+        {/* Right Column: Media + inventory + vendor */}
         <div className="lg:col-span-1 max-lg:py-4 flex flex-col gap-2">
-          <MediaCard formData={formData} setFormData={setFormData} />
-          <InventoryCard formData={formData} setFormData={setFormData} />
-          <VendorCard formData={formData} setFormData={setFormData} />
+          <MediaCard product={product} setProduct={setProduct} />
+          <InventoryCard product={product} setProduct={setProduct} />
+          <VendorCard product={product} setProduct={setProduct} />
         </div>
 
-        {/* ✅ BUTTON MUST BE INSIDE FORM */}
-        <div className="lg:col-span-3 w-full flex max-sm:justify-center justify-end sm:pr-24">
+        {/* Submit button */}
+        <div className="lg:col-span-3 w-full flex justify-end sm:pr-24">
           <Button type="submit" className="mt-6 w-[220px]">
             Update Product
           </Button>

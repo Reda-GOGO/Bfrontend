@@ -2,11 +2,17 @@ const BASE_URL = import.meta.env.VITE_API_URL || "";
 
 class HttpClient {
   async request<T>(url: string, options: RequestInit = {}): Promise<T> {
+    const headers =
+      options.body instanceof FormData
+        ? options.headers // let browser set multipart boundary
+        : {
+          "Content-Type": "application/json",
+          ...options.headers,
+        };
+
     const response = await fetch(BASE_URL + url, {
       ...options,
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers,
     });
 
     if (!response.ok) {
@@ -25,14 +31,14 @@ class HttpClient {
   post<T>(url: string, body?: any) {
     return this.request<T>(url, {
       method: "POST",
-      body: JSON.stringify(body),
+      body: body instanceof FormData ? body : JSON.stringify(body),
     });
   }
 
   put<T>(url: string, body?: any) {
     return this.request<T>(url, {
       method: "PUT",
-      body: JSON.stringify(body),
+      body: body instanceof FormData ? body : JSON.stringify(body),
     });
   }
 

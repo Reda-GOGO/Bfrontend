@@ -22,8 +22,12 @@ export const productApi = {
     return http.get<Product>(`/product/${id}`);
   },
 
-  createProduct(data: Partial<Product>) {
-    return http.post("/product", data);
+  createProduct(data: FormData) {
+    return http.post("/product", data, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
   },
 
   updateProduct(id: string, data: Partial<Product>) {

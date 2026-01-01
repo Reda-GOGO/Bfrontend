@@ -1,71 +1,88 @@
+import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 
-export default function InventoryCard({ formData, setFormData }: any) {
-  // Build options safely
-  const options = [
-    formData.baseUnit?.name,
-    ...(formData.units || []).map((u: any) => u?.name),
-    formData.inventoryUnit, // explicitly include current inventoryUnit
-  ].filter((v) => typeof v === "string" && v.trim() !== ""); // ✅ only keep non-empty strings
+type Props = {
+  product: {
+    availableQty: number;
+    unit: string;
+  };
+  setProduct: React.Dispatch<
+    React.SetStateAction<{
+      availableQty: number;
+      unit: string;
+    }>
+  >;
+};
 
-  // Ensure unique values
-  const uniqueOptions = Array.from(new Set(options));
+export default function InventoryCard({ product, setProduct }: Props) {
+  const [trackStock, setTrackStock] = React.useState(true);
+  const [lowStockAt, setLowStockAt] = React.useState<number>(0);
 
-  console.log("InventoryUnit value:", formData.inventoryUnit);
-  console.log("Options:", uniqueOptions);
+  const isOutOfStock = trackStock && product.availableQty <= lowStockAt;
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Inventory</CardTitle>
+
+        {isOutOfStock && <Badge variant="destructive">Out of stock</Badge>}
       </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        <div className="flex flex-col gap-2">
-          <Label>Select Unit for Inventory</Label>
-          {uniqueOptions.length > 0 && (
-            <Select
-              value={formData.inventoryUnit ?? undefined}
-              onValueChange={(val) =>
-                setFormData((prev: any) => ({
-                  ...prev,
-                  inventoryUnit: val,
+
+      <CardContent className="space-y-6">
+        {/* ================= TRACKING ================= */}
+        <div className="flex items-start gap-3 rounded-lg border p-4">
+          <Checkbox
+            checked={trackStock}
+            onCheckedChange={(v) => setTrackStock(Boolean(v))}
+          />
+
+          <div className="space-y-1">
+            <Label>Track inventory</Label>
+            <p className="text-xs text-muted-foreground">
+              Stock level will be monitored automatically
+            </p>
+          </div>
+        </div>
+
+        {/* ================= QUANTITY ================= */}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="space-y-2">
+            <Label>
+              Available quantity{" "}
+              <span className="text-muted-foreground">
+                {product.unit ? `(${product.unit})` : ""}
+              </span>
+            </Label>
+
+            <Input
+              type="number"
+              min={0}
+              disabled={!trackStock}
+              value={product.availableQty}
+              onChange={(e) =>
+                setProduct((p) => ({
+                  ...p,
+                  availableQty: Number(e.target.value),
                 }))
               }
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select unit" />
-              </SelectTrigger>
-              <SelectContent>
-                {uniqueOptions.map((opt, idx) => (
-                  <SelectItem key={idx} value={opt}>
-                    {opt}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label>Quantity</Label>
-          <Input
-            type="number"
-            value={formData.inventoryQuantity}
-            onChange={(e) =>
-              setFormData((prev: any) => ({
-                ...prev,
-                inventoryQuantity: e.target.value,
-              }))
-            }
-          />
+            />
+          </div>
+
+          {/* ================= LOW STOCK ================= */}
+          <div className="space-y-2">
+            <Label>Low stock threshold</Label>
+            <Input
+              type="number"
+              min={0}
+              disabled={!trackStock}
+              value={lowStockAt}
+              onChange={(e) => setLowStockAt(Number(e.target.value))}
+            />
+          </div>
         </div>
       </CardContent>
     </Card>

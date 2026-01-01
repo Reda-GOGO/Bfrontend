@@ -2,8 +2,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import type { Product } from "@/types";
 
-export default function BasicInfoCard({ formData, setFormData }: any) {
+export default function BasicInfoCard({
+  product,
+  setProduct,
+}: { product: Product; setProduct: (product: Product) => void }) {
   return (
     <Card>
       <CardHeader>
@@ -11,30 +15,37 @@ export default function BasicInfoCard({ formData, setFormData }: any) {
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
         <div className="flex flex-col gap-2">
-          <Label>Title</Label>
+          <Label>Name</Label>
           <Input
-            value={formData.title}
-            required
+            value={product.name}
             onChange={(e) =>
-              setFormData((prev: any) => ({ ...prev, title: e.target.value }))
+              setProduct((prev: Product) => ({
+                ...prev,
+                name: e.target.value,
+              }))
             }
           />
         </div>
         <div className="flex flex-col gap-2">
           <Label>Handle</Label>
           <Input
-            value={formData.handle}
+            value={product.handle}
+            disabled
             onChange={(e) =>
-              setFormData((prev: any) => ({ ...prev, handle: e.target.value }))
+              setProduct((prev: Product) => ({
+                ...prev,
+                handle: e.target.value,
+              }))
             }
           />
         </div>
         <div className="flex flex-col gap-2">
           <Label>Description</Label>
           <Textarea
-            value={formData.description}
+            value={product.description}
+            disabled
             onChange={(e) =>
-              setFormData((prev: any) => ({
+              setProduct((prev: Product) => ({
                 ...prev,
                 description: e.target.value,
               }))

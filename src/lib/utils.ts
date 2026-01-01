@@ -29,3 +29,8 @@ export function formatMAD(value: number): string {
   // Return final formatted string
   return `${formattedInt}.${decimalPart}`;
 }
+
+export const genRanHex = (size: number) =>
+  [...Array(size)]
+    .map(() => Math.floor(Math.random() * 16).toString(16))
+    .join("");
