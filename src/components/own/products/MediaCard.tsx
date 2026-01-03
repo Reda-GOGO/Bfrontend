@@ -11,8 +11,16 @@ type Props = {
 };
 
 export default function MediaCard({ product, setProduct }: Props) {
+  console.log("product image : ", product.image?.split(":").includes("blob"));
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
-
+  const formatImageUrl = (image: string | null) => {
+    const isImageStored = image?.split(":").includes("blob");
+    if (isImageStored) {
+      return product?.image;
+    } else {
+      return `${import.meta.env.VITE_API_URL + product.image}`;
+    }
+  };
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -52,7 +60,7 @@ export default function MediaCard({ product, setProduct }: Props) {
         {product?.image ? (
           <div className="group relative">
             <img
-              src={`${import.meta.env.VITE_API_URL + product.image}`}
+              src={formatImageUrl(product.image)}
               alt="Product image"
               className="h-44 w-44 rounded-xl border object-cover"
             />
