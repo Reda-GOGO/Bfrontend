@@ -11,7 +11,7 @@ type Props = {
 };
 
 export default function MediaCard({ product, setProduct }: Props) {
-  console.log("product image : ", product.image?.split(":").includes("blob"));
+  console.log("product image : ", product.image);
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
   const formatImageUrl = (image: string | null) => {
     const isImageStored = image?.split(":").includes("blob");
@@ -21,22 +21,22 @@ export default function MediaCard({ product, setProduct }: Props) {
       return `${import.meta.env.VITE_API_URL + product.image}`;
     }
   };
+  const fileRef = React.useRef<File | null>(null);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     const preview = URL.createObjectURL(file);
-
-    setProduct((prev) => ({
-      ...prev,
-      image: preview,
-    }));
+    fileRef.current = file; // save the actual file
+    setProduct((prev) => ({ ...prev, image: preview, imageFile: file }));
   };
 
   const removeImage = () => {
     setProduct((prev) => ({
       ...prev,
       image: null,
+      imageFile: null,
     }));
     if (fileInputRef.current) fileInputRef.current.value = "";
   };

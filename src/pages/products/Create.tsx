@@ -50,8 +50,8 @@ export default function Create() {
       formData.append("units", JSON.stringify(product.units || []));
 
       // optional image
-      if (product.image instanceof File) {
-        formData.append("image", product.image);
+      if (product.imageFile instanceof File) {
+        formData.append("image", product.imageFile);
       }
 
       await productApi.createProduct(formData);
