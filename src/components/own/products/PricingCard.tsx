@@ -8,9 +8,11 @@ import type { Product, ProductUnit } from "@/types";
 export default function PricingCard({
   product,
   setProduct,
+  mode,
 }: {
   product: Product;
   setProduct: React.Dispatch<React.SetStateAction<Product>>;
+  mode: string;
 }) {
   return (
     <Card>
@@ -19,7 +21,7 @@ export default function PricingCard({
       </CardHeader>
       <CardContent className="flex flex-col gap-2">
         <DefaultCard product={product} setProduct={setProduct} />
-        <UnitVariant product={product} setProduct={setProduct} />
+        <UnitVariant product={product} setProduct={setProduct} mode={mode} />
       </CardContent>
     </Card>
   );
@@ -27,7 +29,7 @@ export default function PricingCard({
 
 import { Button } from "@/components/ui/button";
 import { ArrowLeftRight, Plus, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 function DefaultCard({
   product,
@@ -97,21 +99,41 @@ function DefaultCard({
   );
 }
 
+type UnitVariantMode = "create" | "update";
+
 interface UnitVariantProps {
   product: Product;
   setProduct: React.Dispatch<React.SetStateAction<Product>>;
+  mode: UnitVariantMode;
 }
 
-export function UnitVariant({ product, setProduct }: UnitVariantProps) {
+export function UnitVariant({ product, setProduct, mode }: UnitVariantProps) {
   const defaultUnit = product.unit;
   const defaultPrice = product.price;
   const defaultCost = product.cost;
 
   // Load existing variants or start empty
-  const initialVariants = product.units?.filter((u) => !u.isBase) || [];
-  const [variantUnits, setVariantUnits] = useState<ProductUnit[]>(
-    initialVariants.length ? initialVariants : [],
-  );
+  const initialVariants = product.units || [];
+  console.log("initialVariant : ", initialVariants);
+  const [variantUnits, setVariantUnits] = useState<ProductUnit[]>([]);
+  const initializedRef = useRef(false);
+
+  useEffect(() => {
+    if (initializedRef.current) return;
+    if (!product.units || product.units.length === 0) return;
+
+    const variants = product.units
+      .filter((u) => !u.isBase)
+      .map((u) => ({
+        ...u,
+        defaultValue: u.defaultValue ?? 1,
+        variantValue: u.variantValue ?? u.quantityInBase,
+      }));
+
+    setVariantUnits(variants);
+    initializedRef.current = true;
+  }, [product.units]); // 🔥 DEPEND ON product.units
+  console.log("variantUnits : ", variantUnits);
 
   // Add new variant
   const addVariant = () => {
@@ -162,19 +184,37 @@ export function UnitVariant({ product, setProduct }: UnitVariantProps) {
 
   // Sync all units to product.units including default unit
   useEffect(() => {
-    const baseUnit: ProductUnit = {
-      name: defaultUnit,
-      quantityInBase: 1,
-      isBase: true,
-      defaultValue: 1,
-      variantValue: 1,
-      price: defaultPrice,
-      cost: defaultCost,
-    };
+    if (!initializedRef.current) return;
+    if (!defaultUnit) return;
 
-    const validVariants = variantUnits.filter((v) => v.name.trim() !== "");
-    setProduct((prev) => ({ ...prev, units: [baseUnit, ...validVariants] }));
-  }, [variantUnits, defaultUnit, defaultPrice, defaultCost, setProduct]);
+    setProduct((prev) => {
+      let baseUnit: ProductUnit | undefined;
+
+      if (mode === "create") {
+        // 🔥 CREATE: generate base unit
+        baseUnit = {
+          name: defaultUnit,
+          quantityInBase: 1,
+          isBase: true,
+          defaultValue: 1,
+          variantValue: 1,
+          price: defaultPrice,
+          cost: defaultCost,
+        };
+      } else {
+        // 🔥 UPDATE: reuse existing base unit
+        baseUnit = prev.units?.find((u) => u.isBase);
+        if (!baseUnit) return prev; // safety
+      }
+
+      const validVariants = variantUnits.filter((v) => v.name.trim() !== "");
+
+      return {
+        ...prev,
+        units: [baseUnit, ...validVariants],
+      };
+    });
+  }, [variantUnits, defaultUnit, defaultPrice, defaultCost, mode]);
 
   return (
     <div className="flex flex-col gap-4 w-full">
@@ -202,6 +242,7 @@ export function UnitVariant({ product, setProduct }: UnitVariantProps) {
               variant="destructive"
               size="sm"
               className=" top-2 right-2"
+              type="button"
               onClick={() => deleteVariant(index)}
             >
               <Trash2 className="w-4 h-4" />

@@ -83,7 +83,11 @@ export default function UpdateProduct() {
         {/* Left Column: Basic info + pricing + variants */}
         <div className="lg:col-span-2 flex flex-col gap-2">
           <BasicInfoCard product={product} setProduct={setProduct} />
-          <PricingCard product={product} setProduct={setProduct} />
+          <PricingCard
+            product={product}
+            setProduct={setProduct}
+            mode={"update"}
+          />
         </div>
 
         {/* Right Column: Media + inventory + vendor */}

@@ -73,7 +73,11 @@ export default function Create() {
       >
         <div className="lg:col-span-2 flex flex-col gap-2">
           <BasicInfoCard product={product} setProduct={setProduct} />
-          <PricingCard product={product} setProduct={setProduct} />
+          <PricingCard
+            product={product}
+            setProduct={setProduct}
+            mode={"create"}
+          />
         </div>
 
         <div className="lg:col-span-1 max-lg:py-4 flex flex-col gap-2">
