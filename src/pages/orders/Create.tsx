@@ -57,7 +57,7 @@ export default function Create() {
       customerId: customer,
       createdBy: currentUser.id,
       partiallyPaidIn: partiallyPaidIn ? parseFloat(partiallyPaidIn) : 0,
-      paymentMode: paymentMode ? "espèce" : paymentMode,
+      paymentMode: paymentMode ? paymentMode : "espèce",
     };
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/orders`, {

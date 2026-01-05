@@ -284,7 +284,7 @@ export const PAYMENT_MODES = [
 import { cn } from "@/lib/utils";
 
 export function OrderPaymentMode({ order }: { order: Order }) {
-  const mode = PAYMENT_MODES.find((m) => m.value === "virement bancaire");
+  const mode = PAYMENT_MODES.find((m) => m.value === order.paymentMode);
 
   return (
     <div className="w-full">
