@@ -410,7 +410,6 @@ function InvoiceTotalAmountString({ order }: { order: Order }) {
 export const EstimatePDF = ({ order, logoUrl }: { order: Order }) => (
   <Document>
     <Page size="A4" style={styles.page}>
-      <InvoiceImage logoUrl={logoUrl} />
       <InvoiceCustomer order={order} />
       <InvoiceCustomerContainer order={order} />
       <InvoiceTableBody order={order} />
