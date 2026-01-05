@@ -4,10 +4,13 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import logoImage from "../../assets/IMG-20241126-WA0000.jpg";
 import Back from "@/components/own/Back";
+import type { Order } from "@/types";
+import { DeliverPDF } from "@/components/own/deliverPdf";
+import { EstimatePDF } from "@/components/own/estimatePdf";
 
 export default function OrderPdf() {
   const { id } = useParams();
-  const [order, setOrder] = useState();
+  const [order, setOrder] = useState<Order>();
   useEffect(() => {
     const getOrder = async () => {
       try {
@@ -26,7 +29,15 @@ export default function OrderPdf() {
     getOrder();
   }, []);
 
-  const document = <InvoicePDF order={order} logoUrl={logoImage} />;
+  let document;
+  if (order?.type === "facture") {
+    document = <InvoicePDF order={order} logoUrl={logoImage} />;
+  } else if (order?.type === "bon de livraison") {
+    document = <DeliverPDF order={order} logoUrl={logoImage} />;
+  } else if (order?.type === "devis") {
+    document = <EstimatePDF order={order} logoUrl={logoImage} />;
+  }
+
   return (
     <Back className="h-full">
       <div className="w-full min-h-full h-full ">
