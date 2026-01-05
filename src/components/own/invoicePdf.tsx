@@ -240,6 +240,7 @@ export const InvoiceTableBody = ({ order }: { order: Order }) => {
           display: "flex",
           flexDirection: "row",
           height: "45vh",
+          fontSize: "11px",
         }}
       >
         <InvoiceColumn
