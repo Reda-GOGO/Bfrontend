@@ -124,12 +124,12 @@ const data = {
       url: "/analytics",
       icon: ChartNoAxesCombined,
     },
-    // {
-    //   title: "Invoice",
-    //   url: "/invoice",
-    //   icon: Files,
-    //   // isActive: true,
-    // },
+    {
+      title: "Invoice",
+      url: "/invoice",
+      icon: Files,
+      // isActive: true,
+    },
     {
       title: "Settings",
       url: "/setting",

@@ -10,12 +10,22 @@ import { useAuth } from "@/contexts/userContext";
 import { toast } from "sonner";
 import { CircleCheckBig, CircleX } from "lucide-react";
 import { useNavigate } from "react-router";
+import { OrderPaymentMode } from "./Order";
+import OrderPaymentModeCreate from "@/components/own/orders/OrderPaymentModeCreate";
 
 export default function Create() {
   const isDesktop = useMediaQuery("(min-width : 768px)");
   const navigate = useNavigate();
-  const { orderItems, type, status, customer, totalAmount, totalAmountString } =
-    useOrderContext();
+  const {
+    orderItems,
+    type,
+    status,
+    customer,
+    totalAmount,
+    totalAmountString,
+    partiallyPaidIn,
+    paymentMode,
+  } = useOrderContext();
   const { currentUser } = useAuth();
   const handleSubmit = async () => {
     console.log("orderItems :", orderItems);
@@ -25,6 +35,8 @@ export default function Create() {
     console.log("totalAmount :", totalAmount, typeof totalAmount);
     console.log("totalAmountString :", totalAmountString);
     console.log("currentUser : ", currentUser);
+    console.log("partiallyPaidIn : ", partiallyPaidIn);
+    console.log("payment mode : ", paymentMode);
     if (orderItems.length == 0) {
       return toast.message("failed creating order", {
         description: "missing order items ...",
@@ -44,6 +56,8 @@ export default function Create() {
       totalAmountString,
       customerId: customer,
       createdBy: currentUser.id,
+      partiallyPaidIn: partiallyPaidIn ? parseFloat(partiallyPaidIn) : 0,
+      paymentMode: paymentMode ? "espèce" : paymentMode,
     };
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/orders`, {
@@ -85,6 +99,7 @@ export default function Create() {
           <div className="@[768px]/main:col-span-1 max-lg:py-4 flex flex-col gap-2">
             <CustomerForm />
             <TypeForm />
+            <OrderPaymentModeCreate />
           </div>
         </div>
         <div className="flex w-full p-4 justify-end">

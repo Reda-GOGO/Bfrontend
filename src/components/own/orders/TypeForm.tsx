@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
@@ -20,34 +21,35 @@ import {
   DollarSign,
   Hourglass,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { useOrderContext } from "@/contexts/orderContext";
 
-// Define order types and icons
-const ORDER_TYPES = [
+// Order Types
+export const ORDER_TYPES = [
   {
-    label: "Invoice",
-    value: "invoice",
+    label: "Facture",
+    value: "facture",
     icon: <FileText className="w-4 h-4 mr-2" />,
   },
   {
-    label: "Purchase Order",
-    value: "purchase",
+    label: "Bon de Commande",
+    value: "bon de commande",
     icon: <ClipboardList className="w-4 h-4 mr-2" />,
   },
   {
-    label: "Delivery Order",
-    value: "delivery",
+    label: "Bon de Livraison",
+    value: "bon de livraison",
     icon: <Truck className="w-4 h-4 mr-2" />,
   },
   {
-    label: "Estimate",
-    value: "estimate",
+    label: "Devis",
+    value: "devis",
     icon: <FileSignature className="w-4 h-4 mr-2" />,
   },
 ];
 
-// Define status types and icons
-const STATUSES = [
+// Status Types
+export const STATUSES = [
   {
     label: "Pending",
     value: "pending",
@@ -71,11 +73,18 @@ const STATUSES = [
 ];
 
 export default function TypeForm() {
-  const { type, setType, setStatus, status } = useOrderContext();
+  const {
+    type,
+    setType,
+    status,
+    setStatus,
+    partiallyPaidIn,
+    setPartiallyPaidIn,
+  } = useOrderContext();
+  const [partialValue, setPartialValue] = useState(partiallyPaidIn);
 
   const isInvoice = type === "invoice";
-  const selectedOrderType = ORDER_TYPES.find((o) => o.value === type);
-  const selectedStatus = STATUSES.find((s) => s.value === status);
+
   return (
     <Card className="w-full border-muted shadow-sm">
       <CardHeader>
@@ -83,6 +92,7 @@ export default function TypeForm() {
           Create New Order
         </CardTitle>
       </CardHeader>
+
       <CardContent className="space-y-6">
         {/* Order Type Select */}
         <div className="space-y-1">
@@ -90,6 +100,7 @@ export default function TypeForm() {
             Order Type
           </Label>
           <Select
+            value={type}
             onValueChange={(value) => {
               setType(value);
               if (value === "invoice") {
@@ -108,14 +119,13 @@ export default function TypeForm() {
             <SelectContent>
               <SelectGroup>
                 <SelectLabel>Order Types</SelectLabel>
-                {ORDER_TYPES.map((type) => (
+                {ORDER_TYPES.map((o) => (
                   <SelectItem
-                    key={type.value}
-                    value={type.value}
+                    key={o.value}
+                    value={o.value}
                     className="flex items-center"
                   >
-                    {type.icon}
-                    {type.label}
+                    {o.icon} {o.label}
                   </SelectItem>
                 ))}
               </SelectGroup>
@@ -130,33 +140,53 @@ export default function TypeForm() {
           </Label>
           {isInvoice ? (
             <div className="flex items-center gap-2 bg-muted px-3 py-2 rounded-md text-sm text-muted-foreground">
-              <BadgeCheck className="w-4 h-4 text-green-600" />
-              Paid (Auto-set for Invoice)
+              <BadgeCheck className="w-4 h-4 text-green-600" /> Paid (Auto-set
+              for Invoice)
             </div>
           ) : (
-            <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger id="status" className="w-full">
-                <SelectValue
-                  placeholder="Select status"
-                  className="flex items-center"
-                />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectLabel>Status</SelectLabel>
-                  {STATUSES.map((s) => (
-                    <SelectItem
-                      key={s.value}
-                      value={s.value}
-                      className="flex items-center"
-                    >
-                      {s.icon}
-                      {s.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+            <div className="space-y-2">
+              <Select value={status} onValueChange={setStatus}>
+                <SelectTrigger id="status" className="w-full">
+                  <SelectValue
+                    placeholder="Select status"
+                    className="flex items-center"
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Status</SelectLabel>
+                    {STATUSES.map((s) => (
+                      <SelectItem
+                        key={s.value}
+                        value={s.value}
+                        className="flex items-center"
+                      >
+                        {s.icon} {s.label}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+
+              {/* Partially Paid Input */}
+              {status === "partially_paid" && (
+                <div className="flex flex-col space-y-1">
+                  <Label htmlFor="partiallyPaidIn">Amount Paid</Label>
+                  <Input
+                    id="partiallyPaidIn"
+                    type="number"
+                    min={0}
+                    placeholder="Enter amount paid"
+                    value={partialValue}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setPartialValue(val);
+                      setPartiallyPaidIn(Number(val));
+                    }}
+                  />
+                </div>
+              )}
+            </div>
           )}
         </div>
       </CardContent>

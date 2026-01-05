@@ -1,3 +1,4 @@
+import type { Order, OrderItem } from "@/types";
 import {
   Document,
   Image,
@@ -41,7 +42,8 @@ export const styles = StyleSheet.create({
       gap: "4px",
     },
     name: {
-      fontSize: 14,
+      fontSize: 18,
+      textTransform: "uppercase",
       fontWeight: "bold",
     },
     number: {
@@ -136,13 +138,13 @@ export const InvoiceImage = ({ logoUrl }) => (
     <Image style={styles.logo} src={logoUrl} />
   </View>
 );
-export const InvoiceCustomer = () => (
+export const InvoiceCustomer = ({ order }: { order: Order }) => (
   <View style={styles.customerInfo.container}>
-    <Text style={styles.customerInfo.name}>ARJDAL BADR</Text>
-    <Text style={styles.customerInfo.number}>ICE : 003695576000050</Text>
+    <Text style={styles.customerInfo.name}>{order.customer.name}</Text>
+    <Text style={styles.customerInfo.number}>ICE : {order.customer?.ice}</Text>
   </View>
 );
-export const InvoiceCustomerContainer = () => (
+export const InvoiceCustomerContainer = ({ order }: { order: Order }) => (
   <>
     <Text style={styles.title}>Facture</Text>
     <View style={styles.invoiceData.container}>
@@ -159,13 +161,15 @@ export const InvoiceCustomerContainer = () => (
       </View>
       <View style={styles.invoiceData.secondRow}>
         <View style={styles.invoiceData.firstCol}>
-          <Text style={{ fontSize: 9 }}>FACTURE 188</Text>
+          <Text style={{ fontSize: 9 }}>FACTURE {order.id}</Text>
         </View>
         <View style={styles.invoiceData.secondCol}>
-          <Text style={{ fontSize: 9 }}>9/5/2025</Text>
+          <Text style={{ fontSize: 9 }}>
+            {new Date(order.createdAt).toLocaleDateString()}
+          </Text>
         </View>
         <View style={styles.invoiceData.thirdCol}>
-          <Text style={{ fontSize: 9 }}>Espèce</Text>
+          <Text style={{ fontSize: 9 }}>{order.paymentMode}</Text>
         </View>
       </View>
     </View>
@@ -218,19 +222,15 @@ const baseColumnStyle = {
   padding: "2px",
 };
 
-export const InvoiceColumn = ({ style, dataKey }) => (
+export const InvoiceColumn = ({ order, style, dataKey }: { order: Order }) => (
   <View style={{ ...baseColumnStyle, ...style }}>
-    {data.map((item, index) => <Text key={index}>{item[dataKey]}</Text>)}
+    {order.items.map((item, index) => (
+      <Text key={index}>{item[dataKey]}</Text>
+    ))}
   </View>
 );
 
-export const InvoiceTableBody = () => {
-  const totalSum = data.reduce((acc, item) => {
-    return acc + parseFloat(item.price) * parseFloat(item.quantity);
-  }, 0);
-
-  // Format the total sum to two decimal places
-  const formattedTotal = totalSum.toFixed(2);
+export const InvoiceTableBody = ({ order }: { order: Order }) => {
   return (
     <View style={{ width: "100%" }}>
       <InvoiceTableHeader />
@@ -243,15 +243,20 @@ export const InvoiceTableBody = () => {
         }}
       >
         <InvoiceColumn
+          order={order}
           dataKey="quantity"
           style={{ width: "10%", borderLeft: "1px" }}
         />
 
-        <InvoiceColumn dataKey="name" style={{ width: "50%" }} />
+        <InvoiceColumn order={order} dataKey="name" style={{ width: "50%" }} />
 
-        <InvoiceColumn dataKey="unit" style={{ width: "10%" }} />
+        <InvoiceColumn order={order} dataKey="unit" style={{ width: "10%" }} />
 
-        <InvoiceColumn dataKey="price" style={{ width: "15%" }} />
+        <InvoiceColumn
+          order={order}
+          dataKey="unitPrice"
+          style={{ width: "15%" }}
+        />
 
         <View
           style={{
@@ -260,12 +265,8 @@ export const InvoiceTableBody = () => {
             position: "relative",
           }}
         >
-          {data.map((item, index) => (
-            <Text key={index}>
-              {parseFloat(
-                parseFloat(item.price) * parseFloat(item.quantity),
-              ).toFixed(2)}
-            </Text>
+          {order.items.map((item, index) => (
+            <Text key={index}>{item.totalAmount}</Text>
           ))}
 
           <View
@@ -278,7 +279,7 @@ export const InvoiceTableBody = () => {
               left: 0,
             }}
           >
-            {<Text style={{ textAlign: "center" }}>{formattedTotal}</Text>}
+            {<Text style={{ textAlign: "center" }}>{order.totalAmount}</Text>}
           </View>
         </View>
       </View>
@@ -321,141 +322,6 @@ export const InvoiceTableFooter = () => (
     </Text>
   </View>
 );
-const data = [
-  {
-    quantity: 5,
-    name: "Wooden Planks - Premium Grade",
-    unit: "Meter",
-    price: "15.75",
-    price_tax: "18.92",
-  },
-  {
-    quantity: 10,
-    name: "Steel Reinforcement Bars",
-    unit: "Bundle",
-    price: "125.45",
-    price_tax: "145.24",
-  },
-  {
-    quantity: 8,
-    name: "Concrete Cement - High Strength",
-    unit: "Bag",
-    price: "50.00",
-    price_tax: "58.50",
-  },
-  {
-    quantity: 3,
-    name: "PVC Pipes - 3m Length",
-    unit: "Piece",
-    price: "30.50",
-    price_tax: "35.85",
-  },
-  {
-    quantity: 15,
-    name: "Cement Blocks",
-    unit: "Block",
-    price: "8.30",
-    price_tax: "9.66",
-  },
-  {
-    quantity: 20,
-    name: "Aluminum Sheets - Industrial Grade",
-    unit: "Sheet",
-    price: "45.20",
-    price_tax: "53.02",
-  },
-  {
-    quantity: 12,
-    name: "Glass Panels - Tempered",
-    unit: "Panel",
-    price: "65.30",
-    price_tax: "76.10",
-  },
-  {
-    quantity: 25,
-    name: "Sand - Fine Grain",
-    unit: "Ton",
-    price: "35.10",
-    price_tax: "41.16",
-  },
-  {
-    quantity: 50,
-    name: "Bricks - Standard Red",
-    unit: "Brick",
-    price: "0.85",
-    price_tax: "1.00",
-  },
-  {
-    quantity: 18,
-    name: "Tiles - Ceramic Floor",
-    unit: "Box",
-    price: "72.50",
-    price_tax: "85.35",
-  },
-  {
-    quantity: 22,
-    name: "Insulation Roll - 50mm",
-    unit: "Roll",
-    price: "42.00",
-    price_tax: "49.50",
-  },
-  {
-    quantity: 30,
-    name: "Electrical Cables - 2mm",
-    unit: "Meter",
-    price: "3.50",
-    price_tax: "4.13",
-  },
-  {
-    quantity: 7,
-    name: "Air Conditioning Units - 1.5 Ton",
-    unit: "Unit",
-    price: "550.00",
-    price_tax: "638.00",
-  },
-  {
-    quantity: 16,
-    name: "Paint - Wall White",
-    unit: "Gallon",
-    price: "22.75",
-    price_tax: "26.20",
-  },
-  {
-    quantity: 11,
-    name: "Wooden Nails - 100g",
-    unit: "Pack",
-    price: "4.25",
-    price_tax: "5.02",
-  },
-  {
-    quantity: 14,
-    name: "Lumber - Softwood",
-    unit: "Piece",
-    price: "20.50",
-    price_tax: "24.15",
-  },
-  {
-    quantity: 9,
-    name: "Roofing Sheets - Zinc",
-    unit: "Sheet",
-    price: "35.90",
-    price_tax: "42.32",
-  },
-  {
-    quantity: 6,
-    name: "Electric Switches - 5A",
-    unit: "Pack",
-    price: "12.00",
-    price_tax: "14.10",
-  },
-  {
-    quantity: 13,
-    name: "Concrete Nails - 200g",
-    unit: "Pack",
-    price: "5.80",
-    price_tax: "6.80",
-  },
-];
 
 const sharedStyle = {
   border: "1px",
@@ -486,7 +352,7 @@ const rightColumnStyle = {
   width: "15%",
 };
 
-export const InvoiceTotalAmount = () => {
+export const InvoiceTotalAmount = ({ order }: { order: Order }) => {
   return (
     <View style={containerStyle}>
       <View style={[columnStyle, leftColumnStyle]}>
@@ -505,28 +371,51 @@ export const InvoiceTotalAmount = () => {
         <View
           style={[sharedStyle, { borderBottom: "none", borderLeft: "none" }]}
         >
-          <Text>6666.67</Text>
+          <Text>{order.totalAmount}</Text>
         </View>
         <View
           style={[sharedStyle, { borderBottom: "none", borderLeft: "none" }]}
         >
-          <Text>22222.33</Text>
+          <Text>{parseFloat(order.totalAmount * order.tax).toFixed(2)}</Text>
         </View>
         <View style={[sharedStyle, { borderLeft: "none" }]}>
-          <Text>800000000.50</Text>
+          <Text>{order.totalAmountWithTax}</Text>
         </View>
       </View>
     </View>
   );
 };
-export const InvoicePDF = ({ products, total, logoUrl }) => (
+
+function InvoiceTotalAmountString({ order }: { order: Order }) {
+  return (
+    <View
+      style={{
+        display: "flex",
+        gap: 4,
+        flexDirection: "column",
+      }}
+    >
+      <Text
+        style={{
+          fontWeight: "bold",
+        }}
+      >
+        Arrétée la présente facture à la somme de :
+      </Text>
+      <Text>{order.totalAmountString}</Text>
+    </View>
+  );
+}
+
+export const InvoicePDF = ({ order, logoUrl }: { order: Order }) => (
   <Document>
     <Page size="A4" style={styles.page}>
       <InvoiceImage logoUrl={logoUrl} />
-      <InvoiceCustomer />
-      <InvoiceCustomerContainer />
-      <InvoiceTableBody />
-      <InvoiceTotalAmount />
+      <InvoiceCustomer order={order} />
+      <InvoiceCustomerContainer order={order} />
+      <InvoiceTableBody order={order} />
+      <InvoiceTotalAmount order={order} />
+      <InvoiceTotalAmountString order={order} />
       <InvoiceTableFooter />
     </Page>
   </Document>

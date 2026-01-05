@@ -13,8 +13,14 @@ import {
 import { Button } from "@/components/ui/button";
 import OrderLine from "./OrderLine.tsx";
 import SearchDialog from "./Search.tsx";
+import { useState } from "react";
 
 export default function ProductForm() {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const handleDialogOpen = () => {
+    setIsDialogOpen(true);
+  };
   const { selectedProducts } = useOrderContext();
   return (
     <Card className="w-full ">
@@ -23,7 +29,10 @@ export default function ProductForm() {
       </CardHeader>
       <CardContent>
         <div className="flex w-full gap-2 items-center justify-center max-xl:flex-col ">
-          <div className="flex relative w-3/5 max-xl:w-full">
+          <div
+            className="flex relative w-3/5 max-xl:w-full"
+            onClick={handleDialogOpen}
+          >
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               type="text"
@@ -32,13 +41,13 @@ export default function ProductForm() {
             ></Input>
           </div>
           <div className="grid grid-cols-2 max-xl:grid-cols-1 w-2/5 max-xl:w-full gap-2">
-            <Dialog>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button size={"sm"} variant={"outline"}>
                   Browse
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:min-w-2xl w-full px-0  flex flex-col overflow-auto">
+              <DialogContent className="sm:min-w-4xl w-full  px-0  flex flex-col overflow-auto">
                 <DialogHeader className="p-4 ">
                   <DialogTitle>Products</DialogTitle>
                   <DialogDescription>

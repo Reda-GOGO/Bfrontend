@@ -11,9 +11,11 @@ import {
 } from "@/components/ui/table";
 import {
   BadgeCheck,
+  ChevronDown,
   CircleSlash,
   ClipboardList,
   DollarSign,
+  EllipsisVertical,
   FileSignature,
   FileText,
   Hourglass,
@@ -24,8 +26,24 @@ import {
   User,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import Back from "@/components/own/Back";
+import useMediaQuery from "@/hooks/useMediaQuery";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import type { Order } from "@/types";
+import OrderItems from "@/components/own/orders/OrderItems";
+import OrderPayment from "@/components/own/orders/OrderPayment";
+import OrderTimeline from "@/components/own/orders/OrderTimeline";
+import OrderCustomer from "@/components/own/orders/OrderCustomer";
+import { ORDER_TYPES, STATUSES } from "@/components/own/orders/TypeForm";
 
 const ORDER_TYPE_ICONS: Record<string, JSX.Element> = {
   invoice: <FileText className="w-4 h-4 text-blue-500" />,
@@ -82,140 +100,235 @@ export default function OrderDetails() {
   if (order) {
     return (
       <Back>
-        <Card className="w-full max-w-5xl mx-auto p-4">
-          <CardHeader>
-            <CardTitle className="text-xl font-semibold flex items-center justify-between">
-              Order #{order.id}
-              <Badge variant={"outline"}>
-                <div className="flex items-center gap-1">
-                  {statusMeta.icon}
-                  {statusMeta.label}
-                </div>
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-
-          <CardContent className="space-y-6">
-            {/* Summary Section */}
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">Order Type</p>
-                <div className="flex items-center gap-2 text-base">
-                  {ORDER_TYPE_ICONS[order.type]}
-                  <span className="capitalize font-medium">{order.type}</span>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">Order Date</p>
-                <p className="text-base">
-                  {new Date(order.createdAt).toLocaleDateString()}
-                </p>
-              </div>
-              <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">Total Amount</p>
-                <p className="text-lg font-semibold text-primary">
-                  MAD {order.totalAmount.toFixed(2)}
-                </p>
-              </div>
-              <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">Total in Words</p>
-                <p className="text-base italic">{order.totalAmountString}</p>
-              </div>
+        <OrderHeader order={order} />
+        <OrderLayout>
+          <div className="col-span-2">
+            <div className="flex gap-2 flex-col w-full">
+              <OrderItems order={order} />
+              <OrderPayment order={order} />
+              <OrderTimeline order={order} />
             </div>
-
-            <Separator />
-
-            {/* Customer Info */}
-            <div>
-              <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
-                <User className="w-4 h-4" />
-                Customer Information
-              </h3>
-              <div className="grid sm:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Name</p>
-                  <p className="text-base">{order.customer.name}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">ICE</p>
-                  <p className="text-base">{order.customer.ice}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Email</p>
-                  <div className="flex items-center gap-1">
-                    <Mail className="w-4 h-4" />
-                    <a
-                      href={`mailto:${order.customer.email}`}
-                      className="text-sm underline"
-                    >
-                      {order.customer.email}
-                    </a>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Phone</p>
-                  <div className="flex items-center gap-1">
-                    <Phone className="w-4 h-4" />
-                    <a href={`tel:${order.customer.phone}`} className="text-sm">
-                      {order.customer.phone}
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Items Table */}
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Items</h3>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Media</TableHead>
-                      <TableHead>Product</TableHead>
-                      <TableHead>Vendor</TableHead>
-                      <TableHead>Unit</TableHead>
-                      <TableHead>Quantity</TableHead>
-                      <TableHead>Unit Price</TableHead>
-                      <TableHead>Total</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {order.items.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell className="flex items-center gap-3">
-                          {item.product.image ? (
-                            <img
-                              src={`${import.meta.env.VITE_API_URL}${item.product.image
-                                }`}
-                              className="h-12 w-12 object-cover rounded-md"
-                            />
-                          ) : (
-                            <div className="h-12 w-12 object-cover flex items-center justify-center bg-background rounded-md">
-                              {/*   {" "} */}
-                              <ImageOff />
-                            </div>
-                          )}
-                        </TableCell>
-                        <TableCell>{item.name}</TableCell>
-                        <TableCell>{item.product.vendorName}</TableCell>
-                        <TableCell>{item.unit}</TableCell>
-                        <TableCell>{item.quantity}</TableCell>
-                        <TableCell>MAD {item.unitPrice.toFixed(2)}</TableCell>
-                        <TableCell className="font-semibold">
-                          MAD {(item.quantity * item.unitPrice).toFixed(2)}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+          <div className="flex flex-col gap-2 w-full">
+            <OrderCustomer order={order} />
+            <OrderType order={order} />
+            <OrderPaymentMode order={order} />
+          </div>
+        </OrderLayout>
       </Back>
     );
   }
 }
+
+function OrderLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="md:grid flex flex-col  md:grid-cols-3  gap-2  md:px-42 py-4">
+      {children}
+    </div>
+  );
+}
+
+function DisplayRow({
+  label,
+  icon,
+  value,
+}: {
+  label: string;
+  icon: React.ReactNode;
+  value: string;
+}) {
+  return (
+    <div className="flex items-center justify-between">
+      <div className="flex items-center text-sm text-muted-foreground">
+        {icon}
+        {label}
+      </div>
+
+      <p className="text-sm font-semibold capitalize">{value}</p>
+    </div>
+  );
+}
+
+export function OrderType({ order }: { order: Order }) {
+  const type = ORDER_TYPES.find((t) => t.value === order.type);
+  const status = STATUSES.find((s) => s.value === order.status);
+
+  return (
+    <div className="w-full row-span-2">
+      <Card className="h-full">
+        <CardHeader>
+          <CardTitle className="text-base">Type &amp; Status</CardTitle>
+        </CardHeader>
+
+        <CardContent className="space-y-6">
+          {/* Order Type */}
+          {type && (
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">
+                Order Type
+              </p>
+
+              <div className="flex items-center justify-between rounded-md border p-3">
+                <div className="flex items-center text-sm font-medium">
+                  {type.icon}
+                  {type.label}
+                </div>
+
+                <Badge variant="secondary">{type.value}</Badge>
+              </div>
+            </div>
+          )}
+
+          <Separator />
+
+          {/* Order Status */}
+          {status && (
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">
+                Status
+              </p>
+
+              <div className="flex items-center justify-between rounded-md border p-3">
+                <div className="flex items-center text-sm font-medium">
+                  {status.icon}
+                  {status.label}
+                </div>
+
+                <Badge
+                  variant={
+                    order.status === "paid"
+                      ? "default"
+                      : order.status === "canceled"
+                        ? "destructive"
+                        : "secondary"
+                  }
+                >
+                  {status.value.replace("_", " ")}
+                </Badge>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function OrderHeader({ order }: { order: Order }) {
+  const isMobile = useMediaQuery("(max-width : 767px)");
+  const navigate = useNavigate();
+  return (
+    <div className="flex gap-2 w-full justify-end">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant={"outline"} size={"sm"} className="capitalize ">
+            {isMobile ? (
+              <EllipsisVertical />
+            ) : (
+              <>
+                more actions
+                <ChevronDown />
+              </>
+            )}
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuLabel>My Account</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem>Profile</DropdownMenuItem>
+          <DropdownMenuItem>Billing</DropdownMenuItem>
+          <DropdownMenuItem>Team</DropdownMenuItem>
+          <DropdownMenuItem>Subscription</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <Button
+        onClick={() => navigate(`/orders/pdf/${parseFloat(order.id)}`)}
+        size={"sm"}
+        className="capitalize"
+      >
+        generate pdf
+      </Button>
+
+      <Button
+        onClick={() => navigate(`/order/update/`)}
+        size={"sm"}
+        disabled
+        className="capitalize"
+      >
+        update order{" "}
+      </Button>
+    </div>
+  );
+}
+
+import { Banknote, Landmark, CreditCard } from "lucide-react";
+
+export const PAYMENT_MODES = [
+  {
+    label: "Cash",
+    value: "espèce",
+    icon: <Banknote className="h-4 w-4 mr-2 text-green-600" />,
+  },
+  {
+    label: "Bank Transfer",
+    value: "virement bancaire",
+    icon: <Landmark className="h-4 w-4 mr-2 text-blue-600" />,
+  },
+  {
+    label: "Cheque",
+    value: "cheque",
+    icon: <CreditCard className="h-4 w-4 mr-2 text-purple-600" />,
+  },
+];
+
+import { cn } from "@/lib/utils";
+
+export function OrderPaymentMode({ order }: { order: Order }) {
+  const mode = PAYMENT_MODES.find((m) => m.value === "virement bancaire");
+
+  return (
+    <div className="w-full">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Payment Method</CardTitle>
+        </CardHeader>
+
+        <CardContent>
+          {mode ? (
+            <div
+              className={cn(
+                "flex items-center justify-between rounded-md border p-4",
+                "bg-muted/30",
+              )}
+            >
+              <div className="flex items-center text-sm font-medium">
+                {mode.icon}
+                {mode.label}
+              </div>
+
+              <Badge variant="secondary" className="capitalize">
+                {mode.value}
+              </Badge>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              No payment method specified
+            </p>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+// function OrderLayout() {
+//   return (
+//     <div className="grid grid-flow-row-dense grid-cols-3 grid-rows-3 gap-2  md:mx-18 border">
+//       <div className="w-full col-span-2  border"> items </div>
+//       <div className="w-full col-span-2  border"> payment </div>
+//       <div className="w-full   border">customer</div>
+//       <div className="w-full row-span-2  border">order type</div>
+//
+//       <div className="w-full col-span-2   border">timeline</div>
+//     </div>
+//   );
+// }

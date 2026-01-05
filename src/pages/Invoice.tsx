@@ -1,7 +1,27 @@
 import { PDFDownloadLink, PDFViewer } from "@react-pdf/renderer";
 import logoImage from "../assets/IMG-20241126-WA0000.jpg";
 import { InvoicePDF } from "@/components/own/invoicePdf";
+import type { Order } from "@/types";
+import { useEffect, useState } from "react";
 function Invoice() {
+  const [order, setOrder] = useState();
+  useEffect(() => {
+    const getOrder = async () => {
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_API_URL}/orders/${parseInt(20)}`,
+        );
+        if (!res.ok) {
+          throw new Error("HTTP Status : ", res.status);
+        }
+        const data = await res.json();
+        setOrder(data.order);
+      } catch (error) {
+        console.error("Failed to fetch requested order ...", error);
+      }
+    };
+    getOrder();
+  }, []);
   const invoiceData = {
     logoUrl: logoImage, // Place your logo in the public folder or use a remote URL
     products: [
@@ -14,13 +34,7 @@ function Invoice() {
     (sum, item) => sum + item.price * item.quantity,
     0,
   );
-  const document = (
-    <InvoicePDF
-      products={invoiceData.products}
-      total={total}
-      logoUrl={invoiceData.logoUrl}
-    />
-  );
+  const document = <InvoicePDF order={order} logoUrl={invoiceData.logoUrl} />;
   return (
     <div style={{ padding: 20 }}>
       <h1>Invoice Preview</h1>

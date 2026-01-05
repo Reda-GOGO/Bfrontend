@@ -2,13 +2,16 @@ import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import SearchRow from "./SearchRow.tsx";
 import { useEffect, useState } from "react";
 
-export default function SearchResults() {
+export default function SearchResults({ search }: { search: string }) {
   const [products, setProducts] = useState();
   const getProducts = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/product`, {
-        credentials: "include",
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/product?search=${search}`,
+        {
+          credentials: "include",
+        },
+      );
       const data = await res.json();
       setProducts(data.products);
     } catch (e) {
@@ -17,7 +20,7 @@ export default function SearchResults() {
   };
   useEffect(() => {
     getProducts();
-  }, []);
+  }, [search]);
   return (
     <div className="flex w-full py-4 flex-col text-sm ">
       <ScrollArea className="h-76">

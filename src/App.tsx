@@ -17,6 +17,7 @@ import Analytics from "./pages/analytics/Analytics.tsx";
 import Teams from "./pages/teams/Teams.tsx";
 import Member from "./pages/teams/Member.tsx";
 import Update from "./pages/products/Update.tsx";
+import OrderPdf from "./pages/orders/OrderPdf.tsx";
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
           <Route path="/products/update/:handle" element={<Update />} />
           <Route path="/orders" element={<Orders />} />
           <Route path="/orders/:id" element={<Order />} />
+          <Route path="/orders/pdf/:id" element={<OrderPdf />} />
           <Route path="/orders/create" element={<CreateOrder />} />
           <Route path="/invoice" element={<Invoice />} />
           <Route path="/inventory" element={<Inventory />} />

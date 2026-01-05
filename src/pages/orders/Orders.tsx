@@ -58,23 +58,23 @@ import OrdersCards from "@/components/own/orders/OrdersCards";
 // Order type definitions with icon + label
 export const ORDER_TYPES = [
   {
-    label: "Invoice",
-    value: "invoice",
+    label: "Facture",
+    value: "facture",
     icon: <FileText className="h-3.5 w-3.5" />,
   },
   {
-    label: "Purchase Order",
-    value: "purchase",
+    label: "Bon de Commande",
+    value: "bon de commande",
     icon: <ClipboardList className="h-3.5 w-3.5" />,
   },
   {
-    label: "Delivery Order",
-    value: "delivery",
+    label: "Bon de Livraison",
+    value: "bon de livraison",
     icon: <Truck className="h-3.5 w-3.5" />,
   },
   {
-    label: "Estimate",
-    value: "estimate",
+    label: "Devis",
+    value: "devis",
     icon: <FileSignature className="h-3.5 w-3.5" />,
   },
 ];

@@ -13,8 +13,10 @@ import {
 } from "@/components/ui/select";
 import { DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 export default function SearchDialog() {
+  const [search, setSearch] = useState("");
   return (
     <div className="flex w-full flex-col ">
       <div className="flex w-full gap-2 px-2 max-sm:flex-col max-sm:flex-col-reverse">
@@ -24,6 +26,8 @@ export default function SearchDialog() {
             type="text"
             placeholder="search for product"
             className="pl-8"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
           ></Input>
         </div>
         <div className="flex">
@@ -44,7 +48,7 @@ export default function SearchDialog() {
           </Select>
         </div>
       </div>
-      <SearchResults />
+      <SearchResults search={search} />
       <div className="flex w-full justify-end px-4">
         <div className="flex gap-2">
           <DialogClose asChild>

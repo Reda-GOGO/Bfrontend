@@ -45,6 +45,8 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
   const [selectedProducts, setSelectedProducts] = useState<ProductType[]>([]);
   const [totalAmount, setTotalAmount] = useState<number>(0);
   const [totalAmountString, setTotalAmountString] = useState<string>("");
+  const [partiallyPaidIn, setPartiallyPaidIn] = useState(0);
+  const [paymentMode, setPaymentMode] = useState("espece");
 
   const value: OrderContextType = {
     customer,
@@ -61,6 +63,10 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
     setOrderItems,
     selectedProducts,
     setSelectedProducts,
+    partiallyPaidIn,
+    setPartiallyPaidIn,
+    paymentMode,
+    setPaymentMode,
   };
   return (
     <OrderContext.Provider value={value}>{children}</OrderContext.Provider>

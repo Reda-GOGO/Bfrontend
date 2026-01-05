@@ -119,6 +119,8 @@ export type Order = {
   items?: OrderItem[];
   invoice?: Invoice | null;
   customer?: Customer;
+  tax?: number;
+  totalAmountWithTax: number;
   user?: User;
 };
 

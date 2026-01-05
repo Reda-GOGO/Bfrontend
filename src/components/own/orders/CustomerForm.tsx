@@ -29,6 +29,8 @@ import useMediaQuery from "@/hooks/useMediaQuery";
 import { useOrderContext } from "@/contexts/orderContext";
 import { toast } from "sonner";
 
+/* --------------------------------- types --------------------------------- */
+
 interface Customer {
   id: number;
   name: string;
@@ -37,6 +39,8 @@ interface Customer {
   address?: string;
   ice?: string;
 }
+
+/* ------------------------------ api helpers ------------------------------- */
 
 const fetchCustomersFromAPI = async (): Promise<Customer[]> => {
   try {
@@ -49,6 +53,8 @@ const fetchCustomersFromAPI = async (): Promise<Customer[]> => {
     return [];
   }
 };
+
+/* ------------------------------ main component ---------------------------- */
 
 export default function CustomerForm() {
   const isDesktop = useMediaQuery("(min-width: 768px)");
@@ -63,6 +69,8 @@ export default function CustomerForm() {
   const [createOpen, setCreateOpen] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
 
+  /* ----------------------------- initial load ----------------------------- */
+
   useEffect(() => {
     const load = async () => {
       const list = await fetchCustomersFromAPI();
@@ -72,21 +80,27 @@ export default function CustomerForm() {
     load();
   }, []);
 
+  /* ------------------------------ filtering ------------------------------- */
+
   useEffect(() => {
     const lower = searchValue.toLowerCase();
-    if (lower === "") {
+
+    if (!lower) {
       setFiltered(customers);
-    } else {
-      setFiltered(
-        customers.filter(
-          (c) =>
-            c.name.toLowerCase().includes(lower) ||
-            c.email?.toLowerCase().includes(lower) ||
-            c.phone?.toLowerCase().includes(lower),
-        ),
-      );
+      return;
     }
+
+    setFiltered(
+      customers.filter(
+        (c) =>
+          c.name.toLowerCase().includes(lower) ||
+          c.email?.toLowerCase().includes(lower) ||
+          c.phone?.toLowerCase().includes(lower),
+      ),
+    );
   }, [searchValue, customers]);
+
+  /* ------------------------------ selection ------------------------------- */
 
   const handleSelect = (cust: Customer) => {
     setSelectedCustomer(cust);
@@ -94,6 +108,8 @@ export default function CustomerForm() {
     setSearchValue(cust.name);
     setShowDropdown(false);
   };
+
+  /* -------------------------- create customer form ------------------------ */
 
   const CustomerCreateForm = () => {
     const [formData, setFormData] = useState({
@@ -112,6 +128,7 @@ export default function CustomerForm() {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const { id, value } = e.target;
       setFormData((prev) => ({ ...prev, [id]: value }));
+
       if (errors[id as keyof typeof errors]) {
         setErrors((prev) => ({ ...prev, [id]: "" }));
       }
@@ -119,12 +136,14 @@ export default function CustomerForm() {
 
     const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
+
       const newErrors = {
-        name: formData.name.trim() === "" ? "Name is required" : "",
-        ice: formData.ice.trim() === "" ? "ICE number is required" : "",
+        name: formData.name.trim() ? "" : "Name is required",
+        ice: formData.ice.trim() ? "" : "ICE number is required",
       };
+
       setErrors(newErrors);
-      if (Object.values(newErrors).some((err) => err !== "")) return;
+      if (Object.values(newErrors).some(Boolean)) return;
 
       try {
         const res = await fetch(`${import.meta.env.VITE_API_URL}/customers`, {
@@ -132,11 +151,20 @@ export default function CustomerForm() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formData),
         });
-        const data = await res.json();
-        setCustomers((prev) => [...prev, data]);
-        setSelectedCustomer(data);
-        setCustomer(data.id);
+
+        if (!res.ok) throw new Error("Failed");
+
+        const body = await res.json();
+        const customer: Customer = body.customer ?? body;
+
+        setCustomers((prev) => [...prev, customer]);
+        setFiltered((prev) => [...prev, customer]);
+        setSelectedCustomer(customer);
+        setCustomer(customer.id);
+        setSearchValue(customer.name);
+        setShowDropdown(false);
         setCreateOpen(false);
+
         toast.success("Customer created successfully");
       } catch {
         toast.error("Failed to create customer");
@@ -171,13 +199,14 @@ export default function CustomerForm() {
               {icon} {label}{" "}
               {required && <span className="text-red-500">*</span>}
             </Label>
+
             <Input
               id={id}
-              placeholder={`Enter ${label.toLowerCase()}`}
               value={formData[id as keyof typeof formData]}
               onChange={handleChange}
-              aria-invalid={!!errors[id as keyof typeof errors]}
+              placeholder={`Enter ${label.toLowerCase()}`}
             />
+
             {errors[id as keyof typeof errors] && (
               <p className="text-sm text-red-600">
                 {errors[id as keyof typeof errors]}
@@ -185,6 +214,7 @@ export default function CustomerForm() {
             )}
           </div>
         ))}
+
         <div className="flex justify-end pt-2">
           <Button type="submit" className="gap-2">
             <UserPlus2 className="w-4 h-4" />
@@ -195,40 +225,40 @@ export default function CustomerForm() {
     );
   };
 
+  /* ---------------------------------- UI ---------------------------------- */
+
   return (
-    <Card className="w-full border rounded-xl shadow-sm">
+    <Card className="w-full rounded-xl">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold flex items-center gap-2">
+        <CardTitle className="text-base font-semibold">
           Customer Information
         </CardTitle>
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* Search Input */}
+        {/* Search */}
         <div className="relative">
-          <div className="flex items-center gap-2">
-            <Search className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search customer by name, phone, or email"
-              value={searchValue}
-              onChange={(e) => {
-                setSearchValue(e.target.value);
-                setShowDropdown(true);
-              }}
-              onFocus={() => setShowDropdown(true)}
-              className="pl-9"
-            />
-          </div>
+          <Search className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search customer by name, phone, or email"
+            value={searchValue}
+            className="pl-9"
+            onChange={(e) => {
+              setSearchValue(e.target.value);
+              setShowDropdown(true);
+            }}
+            onFocus={() => setShowDropdown(true)}
+            onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
+          />
 
-          {/* Dropdown list */}
           {showDropdown && (
-            <div className="absolute z-20 mt-1 w-full rounded-md border bg-background shadow-md max-h-56 overflow-auto">
-              {filtered.length > 0 ? (
+            <div className="absolute z-20 mt-1 w-full max-h-56 overflow-auto rounded-md border bg-background shadow-md">
+              {filtered.length ? (
                 filtered.map((c) => (
                   <button
                     key={c.id}
+                    className="w-full px-4 py-2 text-left hover:bg-accent"
                     onClick={() => handleSelect(c)}
-                    className="w-full text-left px-4 py-2 hover:bg-accent"
                   >
                     <div className="font-medium">{c.name}</div>
                     <div className="text-xs text-muted-foreground">
@@ -241,6 +271,7 @@ export default function CustomerForm() {
                   No customers found
                 </div>
               )}
+
               <div className="border-t">
                 <Button
                   variant="ghost"
@@ -260,33 +291,37 @@ export default function CustomerForm() {
 
         {/* Selected customer */}
         {selectedCustomer ? (
-          <div className="rounded-md border p-4 bg-muted/50 space-y-1 relative">
-            <p className="font-medium text-base">{selectedCustomer.name}</p>
+          <div className="relative space-y-1 rounded-md border bg-muted/50 p-4">
+            <p className="text-base font-medium">{selectedCustomer.name}</p>
+
             {selectedCustomer.phone && (
               <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Phone className="w-4 h-4" /> {selectedCustomer.phone}
+                <Phone className="h-4 w-4" /> {selectedCustomer.phone}
               </p>
             )}
+
             {selectedCustomer.email && (
               <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Mail className="w-4 h-4" /> {selectedCustomer.email}
+                <Mail className="h-4 w-4" /> {selectedCustomer.email}
               </p>
             )}
+
             {selectedCustomer.address && (
               <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                <MapPin className="w-4 h-4" /> {selectedCustomer.address}
+                <MapPin className="h-4 w-4" /> {selectedCustomer.address}
               </p>
             )}
+
             {selectedCustomer.ice && (
               <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Landmark className="w-4 h-4" /> ICE: {selectedCustomer.ice}
+                <Landmark className="h-4 w-4" /> ICE: {selectedCustomer.ice}
               </p>
             )}
 
             <Button
-              variant="outline"
               size="sm"
-              className="absolute top-3 right-3"
+              variant="outline"
+              className="absolute right-3 top-3"
               onClick={() => {
                 setSelectedCustomer(null);
                 setSearchValue("");
@@ -296,12 +331,12 @@ export default function CustomerForm() {
             </Button>
           </div>
         ) : (
-          <div className="text-center text-sm text-muted-foreground border rounded-md p-4 bg-muted/30">
+          <div className="rounded-md border bg-muted/30 p-4 text-center text-sm text-muted-foreground">
             No customer selected
           </div>
         )}
 
-        {/* Create Customer Modal/Drawer */}
+        {/* Create modal / drawer */}
         {isDesktop ? (
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
             <DialogContent className="sm:max-w-md">
