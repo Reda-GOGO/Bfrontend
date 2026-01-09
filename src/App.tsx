@@ -18,6 +18,9 @@ import Teams from "./pages/teams/Teams.tsx";
 import Member from "./pages/teams/Member.tsx";
 import Update from "./pages/products/Update.tsx";
 import OrderPdf from "./pages/orders/OrderPdf.tsx";
+import CreateCollection from "./pages/collections/Create.tsx";
+import Collections from "./pages/collections/Collections.tsx";
+import Collection from "./pages/collections/Collection.tsx";
 
 function App() {
   return (
@@ -32,6 +35,9 @@ function App() {
           <Route path="/products/:title" element={<Product />} />
           <Route path="/products/create" element={<CreateProduct />} />
           <Route path="/products/update/:handle" element={<Update />} />
+          <Route path="/collections" element={<Collections />} />
+          <Route path="/collections/create" element={<CreateCollection />} />
+          <Route path="/collections/:handle" element={<Collection />} />
           <Route path="/orders" element={<Orders />} />
           <Route path="/orders/:id" element={<Order />} />
           <Route path="/orders/pdf/:id" element={<OrderPdf />} />

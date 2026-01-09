@@ -57,7 +57,7 @@ export type User = {
 };
 
 // ======================
-// PRODUCTS, UNITS & INVENTORY
+// PRODUCTS, UNITS & INVENTORY & COLLECTIONS
 // ======================
 
 export type Product = {
@@ -95,6 +95,23 @@ export type ProductUnit = {
   archived: boolean;
   product?: Product;
   orderItems?: OrderItem[];
+};
+
+export type Collection = {
+  id?: number;
+  name: string;
+  handle: string;
+  description?: string | null;
+  tags?: string | null;
+  image?: string | null;
+  createdAt?: Date;
+  updatedAt?: Date;
+
+  // Relations
+  products?: Product[];
+  _count?: {
+    products: number;
+  };
 };
 
 // ======================

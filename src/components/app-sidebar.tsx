@@ -9,6 +9,7 @@ import {
   KeyRound,
   Layers2,
   LayoutDashboard,
+  Library,
   Map,
   Package,
   PieChart,
@@ -101,6 +102,11 @@ const data = {
       //     url: "#",
       //   },
       // ],
+    },
+    {
+      title: "Collections",
+      url: "/collections",
+      icon: Library,
     },
     {
       title: "Orders",
