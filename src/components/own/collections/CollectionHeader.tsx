@@ -48,6 +48,7 @@ export default function CollectionHeader({
             onClick={() => navigate(`/collections/update/${collection.handle}`)}
             size={"sm"}
             className="capitalize"
+            disabled
           >
             update collection{" "}
           </Button>
