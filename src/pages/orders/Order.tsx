@@ -283,6 +283,7 @@ export const PAYMENT_MODES = [
 
 import { cn } from "@/lib/utils";
 import PdfIcon from "@/assets/PdfIcon";
+import { ORDER_TYPES, STATUSES } from "./Orders";
 
 export function OrderPaymentMode({ order }: { order: Order }) {
   const mode = PAYMENT_MODES.find((m) => m.value === order.paymentMode);
