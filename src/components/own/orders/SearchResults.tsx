@@ -1,6 +1,7 @@
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import SearchRow from "./SearchRow.tsx";
 import { useEffect, useState } from "react";
+import { productApi } from "@/application/products/api/product.api.ts";
 
 export default function SearchResults({ search }: { search: string }) {
   const [products, setProducts] = useState();

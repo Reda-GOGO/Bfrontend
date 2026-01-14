@@ -1,6 +1,6 @@
 import { Route, Routes } from "react-router";
 import { Layout } from "./components/app-sidebar";
-import Login from "./pages/Login";
+import Login from "./pages/login/Login";
 import Inventory from "./pages/inventory/Inventory.tsx";
 import Products from "./pages/products/Products";
 import Product from "./pages/products/[handle]";
@@ -10,7 +10,7 @@ import CreateProduct from "./pages/products/Create.tsx";
 import CreateOrder from "./pages/orders/Create.tsx";
 import Orders from "./pages/orders/Orders.tsx";
 import Order from "./pages/orders/Order.tsx";
-import Setting from "./pages/Setting.tsx";
+import Setting from "./pages/settings/Setting.tsx";
 import Dashboard from "./pages/home/Dashboard.tsx";
 import PrintProductHero from "./pages/pdf/PrintTest.tsx";
 import Analytics from "./pages/analytics/Analytics.tsx";
@@ -19,6 +19,7 @@ import Member from "./pages/teams/Member.tsx";
 import Update from "./pages/products/Update.tsx";
 import OrderPdf from "./pages/orders/OrderPdf.tsx";
 import CreateCollection from "./pages/collections/Create.tsx";
+import UpdateCollection from "./pages/collections/Update.tsx";
 import Collections from "./pages/collections/Collections.tsx";
 import Collection from "./pages/collections/Collection.tsx";
 
@@ -38,6 +39,10 @@ function App() {
           <Route path="/collections" element={<Collections />} />
           <Route path="/collections/create" element={<CreateCollection />} />
           <Route path="/collections/:handle" element={<Collection />} />
+          <Route
+            path="/collections/update/:handle"
+            element={<UpdateCollection />}
+          />
           <Route path="/orders" element={<Orders />} />
           <Route path="/orders/:id" element={<Order />} />
           <Route path="/orders/pdf/:id" element={<OrderPdf />} />

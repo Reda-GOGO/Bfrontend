@@ -43,7 +43,7 @@ import OrderItems from "@/components/own/orders/OrderItems";
 import OrderPayment from "@/components/own/orders/OrderPayment";
 import OrderTimeline from "@/components/own/orders/OrderTimeline";
 import OrderCustomer from "@/components/own/orders/OrderCustomer";
-import { ORDER_TYPES, STATUSES } from "@/components/own/orders/TypeForm";
+// import { ORDER_TYPES, STATUSES } from "@/components/own/orders/TypeForm";
 
 const ORDER_TYPE_ICONS: Record<string, JSX.Element> = {
   invoice: <FileText className="w-4 h-4 text-blue-500" />,
@@ -246,7 +246,7 @@ function OrderHeader({ order }: { order: Order }) {
         size={"sm"}
         className="capitalize"
       >
-        generate pdf
+        <PdfIcon className={"w-8 h-8 text-red-500"} /> generate pdf
       </Button>
 
       <Button
@@ -282,6 +282,7 @@ export const PAYMENT_MODES = [
 ];
 
 import { cn } from "@/lib/utils";
+import PdfIcon from "@/assets/PdfIcon";
 
 export function OrderPaymentMode({ order }: { order: Order }) {
   const mode = PAYMENT_MODES.find((m) => m.value === order.paymentMode);

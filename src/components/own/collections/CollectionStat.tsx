@@ -56,7 +56,7 @@ function CreatedAtCard({ collection }: { collection: Collection }) {
 
   return (
     <CardStats>
-      <CardStatsHeader label="Created Date" />
+      <CardStatsHeader label="Created At" />
       <CardStatsContent>
         <span className="text-md font-bold tracking-tight py-1">
           {dateLabel}

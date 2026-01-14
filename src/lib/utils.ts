@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import n2words from "n2words";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -16,6 +17,15 @@ export function debounce<T extends (...args: any[]) => any>(
   };
 }
 
+export const getTotalInWordsFr = (amount: number) => {
+  const [dirhams, centimes] = amount.toFixed(2).split(".");
+  const dirhamsWords = n2words(parseInt(dirhams), { lang: "fr" });
+  const centimesWords =
+    parseInt(centimes) > 0
+      ? ` et ${n2words(parseInt(centimes), { lang: "fr" })} centimes`
+      : "";
+  return `${dirhamsWords} dirhams${centimesWords}`;
+};
 export function formatMAD(value: number): string {
   // Ensure 2 decimals
   const fixed = value.toFixed(2);

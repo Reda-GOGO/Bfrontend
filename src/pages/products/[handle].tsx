@@ -1,5 +1,4 @@
 import Back from "@/components/own/Back";
-
 import {
   Card,
   CardContent,
@@ -17,8 +16,11 @@ import {
   ArrowRightLeft,
   ChevronDown,
   EllipsisVertical,
+  FileText,
   ImageOff,
+  Info,
   Layers,
+  LinkIcon,
   TrendingDown,
   TrendingUp,
   TrendingUpDown,
@@ -237,45 +239,94 @@ export function formatNumber(value) {
 }
 export function ProductHero({ product }: { product: Product }) {
   return (
-    <div className="hero flex flex-col items-start  gap-6 @[612px]:w-1/2 rounded-xl border ">
-      <span className="leading-none font-semibold pl-6 pt-6">
-        Product Overview
-      </span>
-      <div className="flex @max-[1024px]:flex-col w-full flex-row items-start  gap-6  p-4">
-        {product.image ? (
-          <img
-            src={product.imagePreview}
-            alt={product.name}
-            className="w-full lg:w-64 h-64 object-cover aspect-square rounded-xl border border-border shadow-sm"
-          />
-        ) : (
-          <div className="flex justify-center items-center w-full lg:w-64 h-64 object-cover rounded-xl border border-border shadow-sm">
-            <ImageOff className="w-16 h-16 " />
-          </div>
-        )}
-
-        <div className="flex-1 space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">{product.name}</h1>
-          <p className="text-muted-foreground font-semibold text-lg">
-            {formatNumber(product.price)} MAD
-          </p>
-          <p className="text-muted-foreground text-sm">{product.handle}</p>
-          <div className="flex flex-wrap gap-2 mt-2">
-            {/* <Badge variant="secondary">Price: MAD {product.price}</Badge> */}
-            {/* <Badge variant="outline">Cost: MAD {product.cost}</Badge> */}
-            {/* <Badge variant={product.margin > 40 ? "default" : "destructive"}> */}
-            {/*   Margin: {product.margin.toFixed(1)}% */}
-            {/* </Badge> */}
-          </div>
-          <p className="text-sm text-muted-foreground mt-3">
-            {product.description}
-          </p>
+    <Card className="overflow-hidden shadow-sm border">
+      <CardHeader className="pb-4">
+        <div className="flex items-center gap-2">
+          <Info className="w-4 h-4 text-primary" />
+          <CardTitle className="text-lg font-bold">Product Overview</CardTitle>
         </div>
-      </div>
-    </div>
+        <CardDescription>
+          Main identity and visual details of your product
+        </CardDescription>
+      </CardHeader>
+
+      <CardContent className="space-y-6">
+        {/* Visual Preview */}
+        <div className="group relative w-full overflow-hidden rounded-xl border bg-muted/30 aspect-video flex items-center justify-center">
+          <ProductImageCard
+            product={product}
+            className="transition-transform duration-500 group-hover:scale-105 w-70 h-70"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+        </div>
+
+        {/* Textual Metadata */}
+        <div className="space-y-4">
+          <div className="flex flex-col gap-1">
+            <h3 className="text-2xl font-black tracking-tight text-foreground lowercase first-letter:uppercase">
+              {product.name || "Untitled Collection"}
+            </h3>
+            <div className="flex items-center gap-2 mt-1">
+              <LinkIcon className="w-3.5 h-3.5 text-muted-foreground" />
+              <code className="text-[12px] bg-muted px-2 py-0.5 rounded-md font-mono text-muted-foreground italic">
+                /{product.handle}
+              </code>
+            </div>
+          </div>
+
+          <Separator className="bg-muted/60" />
+
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <FileText className="w-3 h-3" />
+              Description
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed italic">
+              {product.description ||
+                "No description provided for this collection."}
+            </p>
+          </div>
+
+          {/* Metadata Badges */}
+          <div className="flex flex-wrap gap-2 pt-2">
+            <Badge
+              variant="secondary"
+              className="bg-primary/5 text-primary border-primary/10 hover:bg-primary/10"
+            >
+              Active Status
+            </Badge>
+            <Badge variant="outline" className="text-muted-foreground">
+              {product.units?.length || 0} Unit(s) Linked
+            </Badge>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
-
+function ProductImageCard({
+  product,
+  className,
+}: { product: Product; className: string }) {
+  if (product.image) {
+    return (
+      <img
+        src={`${import.meta.env.VITE_API_URL + product.image}`}
+        alt={product.name}
+        className={cn(
+          "h-full w-full object-cover transition-transform duration-500 group-hover:scale-100",
+          className,
+        )}
+      />
+    );
+  } else {
+    return (
+      <div className="flex h-full w-full items-center justify-center bg-primary/5">
+        <Layers className="h-10 w-10 text-primary/20" />
+      </div>
+    );
+  }
+}
 function ProductChart() {
   return <ChartBarDefault />;
 }
@@ -289,6 +340,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
+import { cn } from "@/lib/utils";
 
 export const description = "A bar chart";
 

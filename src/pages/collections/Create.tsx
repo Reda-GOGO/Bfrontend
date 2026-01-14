@@ -40,16 +40,16 @@ export default function Create() {
       if (collection.name) {
         await collectionApi.createCollection(formData);
       } else {
-        toast.error("Failed to create product , name is required");
+        toast.error("Failed to create collection , name is required");
         return;
       }
 
-      toast.success("Product created successfully");
+      toast.success("collection created successfully");
       navigate("/collections");
       reset();
     } catch (error) {
-      console.error("Create product error:", error);
-      toast.error("Failed to create product");
+      console.error("Create collection error:", error);
+      toast.error("Failed to create collection");
     }
   };
   return (

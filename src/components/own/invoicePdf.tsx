@@ -222,10 +222,17 @@ const baseColumnStyle = {
   padding: "2px",
 };
 
-export const InvoiceColumn = ({ order, style, dataKey }: { order: Order }) => (
+export const InvoiceColumn = ({
+  order,
+  style,
+  dataKey,
+  isPrice,
+}: { order: Order; isPrice: boolean }) => (
   <View style={{ ...baseColumnStyle, ...style }}>
     {order.items.map((item, index) => (
-      <Text key={index}>{item[dataKey]}</Text>
+      <Text key={index}>
+        {isPrice ? formattedPrice(item[dataKey]) : item[dataKey]}
+      </Text>
     ))}
   </View>
 );
@@ -256,6 +263,7 @@ export const InvoiceTableBody = ({ order }: { order: Order }) => {
         <InvoiceColumn
           order={order}
           dataKey="unitPrice"
+          isPrice={true}
           style={{ width: "15%" }}
         />
 
@@ -267,7 +275,7 @@ export const InvoiceTableBody = ({ order }: { order: Order }) => {
           }}
         >
           {order.items.map((item, index) => (
-            <Text key={index}>{item.totalAmount}</Text>
+            <Text key={index}>{formattedPrice(item.totalAmount)}</Text>
           ))}
 
           <View
@@ -280,7 +288,11 @@ export const InvoiceTableBody = ({ order }: { order: Order }) => {
               left: 0,
             }}
           >
-            {<Text style={{ textAlign: "center" }}>{order.totalAmount}</Text>}
+            {
+              <Text style={{ textAlign: "center" }}>
+                {formattedPrice(order.totalAmount)}
+              </Text>
+            }
           </View>
         </View>
       </View>
@@ -372,15 +384,19 @@ export const InvoiceTotalAmount = ({ order }: { order: Order }) => {
         <View
           style={[sharedStyle, { borderBottom: "none", borderLeft: "none" }]}
         >
-          <Text>{order.totalAmount}</Text>
+          <Text>{formattedPrice(order.totalAmount)}</Text>
         </View>
         <View
           style={[sharedStyle, { borderBottom: "none", borderLeft: "none" }]}
         >
-          <Text>{parseFloat(order.totalAmount * order.tax).toFixed(2)}</Text>
+          <Text>
+            {formattedPrice(
+              parseFloat(order.totalAmount * order.tax).toFixed(2),
+            )}
+          </Text>
         </View>
         <View style={[sharedStyle, { borderLeft: "none" }]}>
-          <Text>{order.totalAmountWithTax}</Text>
+          <Text>{formattedPrice(order.totalAmountWithTax)}</Text>
         </View>
       </View>
     </View>
@@ -421,3 +437,12 @@ export const InvoicePDF = ({ order, logoUrl }: { order: Order }) => (
     </Page>
   </Document>
 );
+
+const formattedPrice = (price) => {
+  return Number(price)
+    .toLocaleString("fr-FR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })
+    .replace(/\u202F|\u00A0/g, " ");
+};

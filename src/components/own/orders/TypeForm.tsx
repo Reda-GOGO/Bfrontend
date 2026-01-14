@@ -1,193 +1,168 @@
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState, useMemo } from "react";
+import {
+  FileText,
+  Hash,
+  Settings2,
+  Truck,
+  ShoppingCart,
+  FileSearch,
+  Ban,
+} from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import {
-  FileText,
-  Truck,
-  ClipboardList,
-  FileSignature,
-  BadgeCheck,
-  Clock,
-  CircleSlash,
-  DollarSign,
-  Hourglass,
-} from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { useOrderContext } from "@/contexts/orderContext";
 
-// Order Types
-export const ORDER_TYPES = [
+// Configuration for order types
+const ORDER_TYPES = [
   {
-    label: "Facture",
     value: "facture",
-    icon: <FileText className="w-4 h-4 mr-2" />,
+    label: "Facture",
+    icon: FileText,
+    color: "text-blue-500",
   },
   {
-    label: "Bon de Commande",
-    value: "bon de commande",
-    icon: <ClipboardList className="w-4 h-4 mr-2" />,
-  },
-  {
+    value: "bl",
     label: "Bon de Livraison",
-    value: "bon de livraison",
-    icon: <Truck className="w-4 h-4 mr-2" />,
+    icon: Truck,
+    color: "text-orange-500",
   },
   {
-    label: "Devis",
+    value: "bc",
+    label: "Bon de Commande",
+    icon: ShoppingCart,
+    color: "text-green-500",
+  },
+  {
     value: "devis",
-    icon: <FileSignature className="w-4 h-4 mr-2" />,
-  },
-];
-
-// Status Types
-export const STATUSES = [
-  {
-    label: "Pending",
-    value: "pending",
-    icon: <Hourglass className="w-4 h-4 mr-2 text-yellow-500" />,
+    label: "Devis",
+    icon: FileSearch,
+    color: "text-purple-500",
   },
   {
-    label: "Partially Paid",
-    value: "partially_paid",
-    icon: <DollarSign className="w-4 h-4 mr-2 text-blue-500" />,
-  },
-  {
-    label: "Paid",
-    value: "paid",
-    icon: <BadgeCheck className="w-4 h-4 mr-2 text-green-600" />,
-  },
-  {
-    label: "Canceled",
-    value: "canceled",
-    icon: <CircleSlash className="w-4 h-4 mr-2 text-red-600" />,
+    value: "none",
+    label: "Without (Empty)",
+    icon: Ban,
+    color: "text-slate-400",
   },
 ];
 
 export default function TypeForm() {
-  const {
-    type,
-    setType,
-    status,
-    setStatus,
-    partiallyPaidIn,
-    setPartiallyPaidIn,
-  } = useOrderContext();
-  const [partialValue, setPartialValue] = useState(partiallyPaidIn);
+  const [orderType, setOrderType] = useState<string>("none");
+  const [isManualRef, setIsManualRef] = useState(false);
+  const [reference, setReference] = useState("REF-2026-001");
 
-  const isInvoice = type === "invoice";
+  // Find the active icon to display in the SelectTrigger
+  // const ActiveIcon = useMemo(() => {
+  //   return ORDER_TYPES.find((t) => t.value === orderType)?.icon || FileText;
+  // }, [orderType]);
 
   return (
-    <Card className="w-full border-muted shadow-sm">
-      <CardHeader>
-        <CardTitle className="text-base font-semibold tracking-tight">
-          Create New Order
+    <Card className="w-full max-w-md mx-auto shadow-md border-muted-foreground/10">
+      <CardHeader className="space-y-1">
+        <CardTitle className="text-xl flex items-center gap-2">
+          Order Configuration
         </CardTitle>
+        <CardDescription>Define document type and reference ID</CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-6">
-        {/* Order Type Select */}
-        <div className="space-y-1">
-          <Label htmlFor="order-type" className="text-sm font-medium">
-            Order Type
-          </Label>
-          <Select
-            value={type}
-            onValueChange={(value) => {
-              setType(value);
-              if (value === "invoice") {
-                setStatus("paid");
-              } else {
-                setStatus("");
-              }
-            }}
-          >
-            <SelectTrigger id="order-type" className="w-full">
-              <SelectValue
-                placeholder="Select order type"
-                className="flex items-center"
-              />
+        {/* Select Dropdown with Icons */}
+        <div className="space-y-2">
+          <Label className="text-sm font-semibold">Document Type</Label>
+          <Select value={orderType} onValueChange={setOrderType}>
+            <SelectTrigger className="w-full h-11">
+              <div className="flex items-center gap-3">
+                {/* <ActiveIcon className="w-4 h-4 text-primary" /> */}
+                <SelectValue placeholder="Select type" />
+              </div>
             </SelectTrigger>
             <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Order Types</SelectLabel>
-                {ORDER_TYPES.map((o) => (
-                  <SelectItem
-                    key={o.value}
-                    value={o.value}
-                    className="flex items-center"
-                  >
-                    {o.icon} {o.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
+              {ORDER_TYPES.map((type) => (
+                <SelectItem key={type.value} value={type.value}>
+                  <div className="flex items-center gap-3">
+                    <type.icon className={`w-4 h-4 ${type.color}`} />
+                    <span>{type.label}</span>
+                  </div>
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
 
-        {/* Status Select */}
-        <div className="space-y-1">
-          <Label htmlFor="status" className="text-sm font-medium">
-            Status
-          </Label>
-          {isInvoice ? (
-            <div className="flex items-center gap-2 bg-muted px-3 py-2 rounded-md text-sm text-muted-foreground">
-              <BadgeCheck className="w-4 h-4 text-green-600" /> Paid (Auto-set
-              for Invoice)
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger id="status" className="w-full">
-                  <SelectValue
-                    placeholder="Select status"
-                    className="flex items-center"
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectLabel>Status</SelectLabel>
-                    {STATUSES.map((s) => (
-                      <SelectItem
-                        key={s.value}
-                        value={s.value}
-                        className="flex items-center"
-                      >
-                        {s.icon} {s.label}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-2 text-muted-foreground">
+              Reference Number
+            </span>
+          </div>
+        </div>
 
-              {/* Partially Paid Input */}
-              {status === "partially_paid" && (
-                <div className="flex flex-col space-y-1">
-                  <Label htmlFor="partiallyPaidIn">Amount Paid</Label>
-                  <Input
-                    id="partiallyPaidIn"
-                    type="number"
-                    min={0}
-                    placeholder="Enter amount paid"
-                    value={partialValue}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setPartialValue(val);
-                      setPartiallyPaidIn(Number(val));
-                    }}
-                  />
-                </div>
-              )}
+        {/* Reference Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between bg-muted/30 p-3 rounded-lg border border-dashed">
+            <div className="flex items-center gap-2">
+              <Settings2 className="w-4 h-4 text-muted-foreground" />
+              <div className="grid gap-0.5">
+                <Label
+                  htmlFor="manual-mode"
+                  className="text-sm font-medium leading-none"
+                >
+                  Manual Entry
+                </Label>
+                <p className="text-[11px] text-muted-foreground">
+                  Enable custom numbering
+                </p>
+              </div>
             </div>
-          )}
+            <Switch
+              id="manual-mode"
+              checked={isManualRef}
+              onCheckedChange={setIsManualRef}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <div className="relative">
+              <Hash
+                className={`absolute left-3 top-3 h-4 w-4 transition-colors ${isManualRef ? "text-primary" : "text-muted-foreground/30"
+                  }`}
+              />
+              <Input
+                value={reference}
+                onChange={(e) => setReference(e.target.value)}
+                disabled={!isManualRef}
+                className={`pl-10 h-11 transition-all ${isManualRef
+                  ? "border-primary ring-2 ring-primary/5"
+                  : "bg-muted/50 text-muted-foreground opacity-70"
+                  }`}
+              />
+            </div>
+            {!isManualRef && (
+              <div className="flex items-center gap-1.5 px-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                <p className="text-[12px] text-muted-foreground">
+                  Auto-sequencing active
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>

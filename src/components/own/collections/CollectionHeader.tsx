@@ -11,8 +11,11 @@ import useMediaQuery from "@/hooks/useMediaQuery";
 import { ChevronDown, EllipsisVertical, Library, Package } from "lucide-react";
 import { useNavigate } from "react-router";
 import { TitleLayout } from "@/components/shared/title-layout";
+import type { Collection } from "@/types";
 
-export default function CollectionHeader() {
+export default function CollectionHeader({
+  collection,
+}: { collection: Collection }) {
   const isMobile = useMediaQuery("(max-width: 767px)");
   const navigate = useNavigate();
   return (
@@ -42,10 +45,9 @@ export default function CollectionHeader() {
             </DropdownMenuContent>
           </DropdownMenu>
           <Button
-            onClick={() => navigate("/collections")}
+            onClick={() => navigate(`/collections/update/${collection.handle}`)}
             size={"sm"}
             className="capitalize"
-            disabled
           >
             update collection{" "}
           </Button>

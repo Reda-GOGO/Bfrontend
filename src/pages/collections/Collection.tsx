@@ -29,7 +29,7 @@ export default function Collection() {
 
   return (
     <Back>
-      <CollectionHeader />
+      <CollectionHeader collection={collection} />
       <div className="lg:grid lg:grid-cols-3 w-full flex flex-col gap-4 xl:px-46">
         <div className="col-span-2 w-full flex gap-2 flex-col">
           <CollectionStat collection={collection} />
@@ -70,7 +70,7 @@ function CollectionProducts({ collection }: { collection: Collection }) {
             </div>
           </ScrollArea>
         ) : (
-          <div className="flex h-[450px] flex-col items-center justify-center gap-2 text-muted-foreground">
+          <div className="flex w-full h-[450px] flex-col items-center justify-center gap-2 text-muted-foreground">
             <EmptyCollectionProducts />
           </div>
         )}
@@ -83,12 +83,12 @@ import { Info, Link as LinkIcon, FileText } from "lucide-react";
 
 function CollectionInfoCard({ collection }: { collection: Collection }) {
   return (
-    <Card className="overflow-hidden shadow-sm border-muted/60">
+    <Card className="overflow-hidden shadow-sm border">
       <CardHeader className="pb-4">
         <div className="flex items-center gap-2">
           <Info className="w-4 h-4 text-primary" />
           <CardTitle className="text-lg font-bold">
-            Collection Information
+            Collection Overview
           </CardTitle>
         </div>
         <CardDescription>
@@ -189,8 +189,8 @@ function ProductCard({
 
       {/* Content Area: Uses flex-1 and min-w-0 to prevent text overflow */}
       <div className="flex flex-col gap-1 flex-1 min-w-0">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-          <span className="font-bold text-sm sm:text-base truncate pr-2">
+        <div className="flex flex-col sm:flex-row max-sm:w-50 sm:items-center justify-between gap-1">
+          <span className="font-bold text-sm sm:text-base  pr-2">
             {product.name}
           </span>
           <Badge

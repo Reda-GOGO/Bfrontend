@@ -39,7 +39,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "./ui/breadcrumb";
-import { Outlet, useLocation } from "react-router";
+import { Outlet, useLocation, useNavigate } from "react-router";
 import { Toaster } from "@/components/ui/sonner";
 
 // This is sample data.
@@ -227,6 +227,17 @@ import {
 export function Layout() {
   const { firstSegment, isRoot } = usePageInfo();
   const [open, setOpen] = React.useState(false);
+  React.useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setOpen((open) => !open);
+      }
+    };
+    document.addEventListener("keydown", down);
+    return () => document.removeEventListener("keydown", down);
+  }, []);
+  const navigate = useNavigate();
 
   return (
     <SidebarProvider>
@@ -264,7 +275,7 @@ export function Layout() {
                     <p className="text-muted-foreground text-sm max-sm:text-xs">
                       Press{" "}
                       <kbd className="bg-muted text-muted-foreground pointer-events-none inline-flex h-5 items-center gap-1 rounded border px-1.5 font-mono text-[10px] font-medium opacity-100 select-none">
-                        <span className="text-xs">⌘</span>J
+                        <span className="text-xs">⌘</span>K
                       </kbd>
                     </p>
                   </div>
@@ -280,32 +291,87 @@ export function Layout() {
                 <CommandList>
                   <CommandEmpty>No results found.</CommandEmpty>
                   <CommandGroup heading="Suggestions">
-                    <CommandItem>
-                      <Calendar />
-                      <span>Calendar</span>
+                    <CommandItem
+                      onSelect={() => {
+                        navigate("/");
+                        setOpen(false);
+                      }}
+                    >
+                      <LayoutDashboard />
+                      <span>Dashboard</span>
                     </CommandItem>
-                    <CommandItem>
-                      <Smile />
-                      <span>Search Emoji</span>
+                    <CommandItem
+                      onSelect={() => {
+                        navigate("/products");
+                        setOpen(false);
+                      }}
+                    >
+                      <Package />
+                      <span>Products</span>
                     </CommandItem>
-                    <CommandItem>
-                      <Calculator />
-                      <span>Calculator</span>
+                    <CommandItem
+                      onSelect={() => {
+                        navigate("/orders");
+                        setOpen(false);
+                      }}
+                    >
+                      <ShoppingCart />
+                      <span>Orders</span>
+                    </CommandItem>
+                    <CommandItem
+                      onSelect={() => {
+                        navigate("/collections");
+                        setOpen(false);
+                      }}
+                    >
+                      <Library />
+                      <span>Collections</span>
+                    </CommandItem>
+                  </CommandGroup>
+                  <CommandSeparator />
+                  <CommandGroup heading="Stock & Performance ">
+                    <CommandItem
+                      onSelect={() => {
+                        navigate("/inventory");
+                        setOpen(false);
+                      }}
+                    >
+                      <Layers2 />
+                      <span>Inventory</span>
+                    </CommandItem>
+                    <CommandItem
+                      onSelect={() => {
+                        navigate("/analytics");
+                        setOpen(false);
+                      }}
+                    >
+                      <ChartNoAxesCombined />
+                      <span>Analytics</span>
                     </CommandItem>
                   </CommandGroup>
                   <CommandSeparator />
                   <CommandGroup heading="Settings">
-                    <CommandItem>
+                    <CommandItem
+                      onSelect={() => {
+                        navigate("/teams");
+                        setOpen(false);
+                      }}
+                    >
                       <User />
-                      <span>Profile</span>
+                      <span>Teams</span>
                       <CommandShortcut>⌘P</CommandShortcut>
                     </CommandItem>
-                    <CommandItem>
-                      <CreditCard />
-                      <span>Billing</span>
-                      <CommandShortcut>⌘B</CommandShortcut>
-                    </CommandItem>
-                    <CommandItem>
+                    {/* <CommandItem> */}
+                    {/*   <CreditCard /> */}
+                    {/*   <span>Billing</span> */}
+                    {/*   <CommandShortcut>⌘B</CommandShortcut> */}
+                    {/* </CommandItem> */}
+                    <CommandItem
+                      onSelect={() => {
+                        navigate("/setting");
+                        setOpen(false);
+                      }}
+                    >
                       <Settings />
                       <span>Settings</span>
                       <CommandShortcut>⌘S</CommandShortcut>
