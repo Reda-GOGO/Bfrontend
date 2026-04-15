@@ -76,6 +76,7 @@ export type Product = {
   availableQty: number;
   archived: boolean;
   units?: ProductUnit[];
+  Collection?: Collection[];
   orderItems?: OrderItem[];
   stats?: ProductStats[];
 };
@@ -128,6 +129,8 @@ export type Order = {
   status: string; // e.g., "Pending", "Completed"
   type: string;
   paymentMode?: string | null;
+  paymentRef?: string;
+  orderRef?: string;
   createdAt: Date;
   updatedAt?: Date | null;
   customerId: number;

@@ -30,6 +30,7 @@ function useProductsLoader() {
 
   useEffect(() => {
     debounceSearch(search);
+    setPagination((prev) => ({ ...prev, currentPage: 1 }));
   }, [search, debounceSearch]);
 
   useEffect(() => {

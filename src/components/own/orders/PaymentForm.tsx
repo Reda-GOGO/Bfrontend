@@ -58,7 +58,7 @@ export default function PaymentForm() {
           <div className="space-y-2">
             <Label className="text-sm font-medium">Payment Mode</Label>
             <Select defaultValue="espece">
-              <SelectTrigger className="h-10">
+              <SelectTrigger className="h-10 w-full">
                 <SelectValue placeholder="Mode" />
               </SelectTrigger>
               <SelectContent>
@@ -89,7 +89,7 @@ export default function PaymentForm() {
           <div className="space-y-2">
             <Label className="text-sm font-medium">Status</Label>
             <Select value={paymentStatus} onValueChange={setPaymentStatus}>
-              <SelectTrigger className="h-10">
+              <SelectTrigger className="h-10 w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -142,7 +142,7 @@ export default function PaymentForm() {
         {/* --- CONDITIONAL PARTIAL PAYMENT SECTION --- */}
         {paymentStatus === "partially-paid" && (
           <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-            <div className="p-4 border border-amber-200 bg-amber-50/50 rounded-lg space-y-3">
+            <div className="p-4 border border-muted-200 bg-muted-50/50 rounded-lg space-y-3">
               <div className="flex items-center gap-2 text-amber-700 text-sm font-medium">
                 <AlertCircle className="w-4 h-4" />
                 Partial Payment Details

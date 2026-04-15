@@ -6,6 +6,7 @@ interface ProductResponse {
   currentPage: number;
   totalPages: number;
   totalCount: number;
+  totalItems: number;
 }
 
 export const productApi = {
@@ -14,6 +15,7 @@ export const productApi = {
     search?: string;
     limit?: number;
     filter_by?: string;
+    collection_handle?: string;
   }) {
     return http.get<ProductResponse>("/product", params);
   },

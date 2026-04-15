@@ -30,7 +30,7 @@ export default function Collection() {
   return (
     <Back>
       <CollectionHeader collection={collection} />
-      <div className="lg:grid lg:grid-cols-3 w-full flex flex-col gap-4 xl:px-46">
+      <div className="lg:grid lg:grid-cols-3 w-full flex flex-col  gap-4 xl:px-46">
         <div className="col-span-2 w-full flex gap-2 flex-col">
           <CollectionStat collection={collection} />
           <CollectionProducts collection={collection} />

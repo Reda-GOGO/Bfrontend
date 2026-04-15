@@ -9,7 +9,7 @@ export function ProductImage({
     return (
       <div
         className={cn(
-          "h-12 w-12 flex items-center justify-center bg-secondary/50 rounded-md border text-muted-foreground",
+          " flex items-center justify-center bg-secondary/50 rounded-md border text-muted-foreground",
           className,
         )}
       >
