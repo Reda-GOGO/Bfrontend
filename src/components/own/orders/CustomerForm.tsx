@@ -62,7 +62,7 @@ export default function CustomerForm({
 }: {
   onSelect?: (customer: Customer | null) => void;
 }) {
-  const [mode, setMode] = useState<"search" | "create">("search");
+  const [mode, setMode] = useState<"search" | "create">("create");
   const [selected, setSelected] = useState<Customer | null>(null);
 
   const handleSelect = (c: Customer) => {
@@ -78,7 +78,7 @@ export default function CustomerForm({
   return (
     <Card className="w-full border-border/50 shadow-sm overflow-hidden">
       {/* ── Header ── */}
-      <CardHeader className="pb-0 pt-5 px-5">
+      <CardHeader className="pb-0  px-5">
         <div className="flex items-start justify-between mb-4">
           <div>
             <h3 className="text-sm font-bold tracking-wide">Customer</h3>

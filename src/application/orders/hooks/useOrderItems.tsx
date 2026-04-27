@@ -1,8 +1,7 @@
-import { collectionApi } from "@/application/collections/api/collection.api";
 import { productApi } from "@/application/products/api/product.api";
 import { debounce } from "@/lib/utils";
-import { OrderEnum, type Collection, type Order, type OrderItem, type Product, type ProductUnit } from "@/types";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import type { OrderItem, Product, ProductUnit } from "@/types";
+import { useState, useCallback, useEffect, useMemo } from "react";
 
 export type SelectedItem = {
   product: Product;
@@ -13,27 +12,14 @@ export type SelectedItem = {
   totalAmount: number;
   verified: boolean;
 };
-export const EMPTY_ORDER: Omit<Order, "id" | "createdAt"> = {
-  totalAmount: 0,
-  discount: 0,
-  profit: 0,
-  partiallyPaidIn: 0,
-  totalAmountString: "",
-  status: OrderEnum.PENDING, // Using your defined enum
-  type: "facture", // Or whatever your default type is
-  orderRef: "",
-  paymentRef: "",
-  paymentMode: "",
-  customerId: 0,
-  createdBy: 0,
-  archived: false,
-  items: [], // Empty array for OrderItems
-  tax: 0.2,
-  totalAmountWithTax: 0,
-};
 
-export function useOrderProductLoader({ search, collectionHandle }: { search: string; collectionHandle?: string }) {
+export type OrderItemsHook = ReturnType<typeof useOrderItems>;
+export default function useOrderItems() {
   const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+  const [search, setSearch] = useState<string>("");
+  const [collectionHandle, setCollectionHandle] = useState<string>("");
+  const [collectionName, setCollectionName] = useState<string>("All Collections");
+
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [pagination, setPagination] = useState({
@@ -72,7 +58,7 @@ export function useOrderProductLoader({ search, collectionHandle }: { search: st
         page: pagination.currentPage,
         search: debouncedSearch,
         limit: pagination.limit,
-        collection_handle: collectionHandle ? collectionHandle : "",
+        collection_handle: collectionHandle,
       })
       .then((res) => {
         if (!isMounted) return;
@@ -147,7 +133,7 @@ export function useOrderProductLoader({ search, collectionHandle }: { search: st
   const orderItems: Omit<OrderItem, "id" | "orderId" | "createdAt" | "updatedAt">[] = useMemo(
     () =>
       Array.from(selected.values())
-        .filter((i) => i.verified)
+        // .filter((i) => i.verified)
         .map((i) => ({
           name: i.product.name,
           quantity: i.quantity,
@@ -172,44 +158,20 @@ export function useOrderProductLoader({ search, collectionHandle }: { search: st
     () => Array.from(selected.values()).some((i) => !i.verified),
     [selected]
   );
-
   return {
-    products,
+    search,
+    setSearch,
+    collectionHandle,
+    setCollectionHandle,
+    collectionName,
+    setCollectionName,
     pagination,
+    products,
     isLoading,
     loadMore,
     selected, addItem, removeItem, patchItem,
     orderItems, totalAmount, hasUnverified,
+    selectedCount: selected.size,
     hasMore: pagination.currentPage < pagination.totalPages,
   };
-}
-
-export function useOrderCollectionLoader() {
-  const [collections, setCollections] = useState<Collection[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  useEffect(() => {
-    setIsLoading(true);
-    collectionApi
-      .getCollections({})
-      .then((res) => {
-        setCollections(res.collections || []);
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-  }, []);
-
-  return {
-    collections,
-    isLoading,
-  };
-}
-
-export default function useOrder() {
-  const [order, setOrder] = useState<Omit<Order, "id" | "createdAt">>(EMPTY_ORDER);
-
-  return {
-    order,
-    setOrder,
-  };
-}
+} 

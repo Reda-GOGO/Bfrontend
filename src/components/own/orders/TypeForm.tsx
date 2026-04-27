@@ -7,6 +7,14 @@ import {
   ShoppingCart,
   FileSearch,
   Ban,
+  Check,
+  X,
+  CreditCard,
+  Banknote,
+  Receipt,
+  Wallet,
+  Minus,
+  Clock,
 } from "lucide-react";
 import {
   Card,
@@ -25,6 +33,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Cols, Rows } from "@/components/shared/main-layout";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import {
+  FieldGroup,
+  FieldSet,
+  FieldLegend,
+  FieldDescription,
+  FieldSeparator,
+  Field,
+  FieldLabel,
+  FieldContent
+} from "@/components/ui/field";
+import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 // Configuration for order types
 const ORDER_TYPES = [
@@ -60,7 +84,7 @@ const ORDER_TYPES = [
   },
 ];
 
-export default function TypeForm() {
+export default function OrderConfiguration() {
   const [orderType, setOrderType] = useState<string>("none");
   const [isManualRef, setIsManualRef] = useState(false);
   const [reference, setReference] = useState("REF-2026-001");
@@ -71,100 +95,288 @@ export default function TypeForm() {
   // }, [orderType]);
 
   return (
-    <Card className="w-full max-w-md mx-auto shadow-md border-muted-foreground/10">
+    <Card className="w-full  mx-auto shadow-md border-muted-foreground/10">
       <CardHeader className="space-y-1">
-        <CardTitle className="text-xl flex items-center gap-2">
+        <CardTitle className="text-sm flex items-center gap-2">
           Order Configuration
         </CardTitle>
-        <CardDescription>Define document type and reference ID</CardDescription>
+        <CardDescription>
+          <Cols className="gap-1">
+            <span className="text-muted-foreground/60 text-xs">
+              Define &amp; configure order parameters such as : reference ID , payment mode , invoice type , etc...
+            </span>
+          </Cols>
+        </CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-6">
         {/* Select Dropdown with Icons */}
-        <div className="space-y-2">
-          <Label className="text-sm font-semibold">Document Type</Label>
-          <Select value={orderType} onValueChange={setOrderType}>
-            <SelectTrigger className="w-full h-11">
-              <div className="flex items-center gap-3">
-                {/* <ActiveIcon className="w-4 h-4 text-primary" /> */}
-                <SelectValue placeholder="Select type" />
-              </div>
-            </SelectTrigger>
-            <SelectContent>
-              {ORDER_TYPES.map((type) => (
-                <SelectItem key={type.value} value={type.value}>
-                  <div className="flex items-center gap-3">
-                    <type.icon className={`w-4 h-4 ${type.color}`} />
-                    <span>{type.label}</span>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <InvoiceType />
+        <PaymentMode />
+        <PaymentStatus />
 
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">
-              Reference Number
-            </span>
-          </div>
-        </div>
 
         {/* Reference Section */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between bg-muted/30 p-3 rounded-lg border border-dashed">
-            <div className="flex items-center gap-2">
-              <Settings2 className="w-4 h-4 text-muted-foreground" />
-              <div className="grid gap-0.5">
-                <Label
-                  htmlFor="manual-mode"
-                  className="text-sm font-medium leading-none"
-                >
-                  Manual Entry
-                </Label>
-                <p className="text-[11px] text-muted-foreground">
-                  Enable custom numbering
-                </p>
-              </div>
-            </div>
-            <Switch
-              id="manual-mode"
-              checked={isManualRef}
-              onCheckedChange={setIsManualRef}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <div className="relative">
-              <Hash
-                className={`absolute left-3 top-3 h-4 w-4 transition-colors ${isManualRef ? "text-primary" : "text-muted-foreground/30"
-                  }`}
-              />
-              <Input
-                value={reference}
-                onChange={(e) => setReference(e.target.value)}
-                disabled={!isManualRef}
-                className={`pl-10 h-11 transition-all ${isManualRef
-                  ? "border-primary ring-2 ring-primary/5"
-                  : "bg-muted/50 text-muted-foreground opacity-70"
-                  }`}
-              />
-            </div>
-            {!isManualRef && (
-              <div className="flex items-center gap-1.5 px-1">
-                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-                <p className="text-[12px] text-muted-foreground">
-                  Auto-sequencing active
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
       </CardContent>
     </Card>
   );
 }
+
+
+function InvoiceType() {
+  const [typeState, setTypeState] = useState<string>("Facture");
+
+  return (
+    <FieldGroup className="w-full">
+      <FieldSet className="w-full">
+        <FieldLegend className="w-full">
+          <Rows className="justify-between items-center gap-2">
+            <Label className="text-sm uppercase tracking-wider text-muted-foreground">
+              Invoice Type
+            </Label>
+            {/* <SelectedPill title={typeState} /> */}
+          </Rows>
+        </FieldLegend>
+        <FieldDescription>
+          Select type of Invoice Correspond to your order
+        </FieldDescription>
+
+        <FieldSet>
+          <Field>
+            <Rows className="gap-1 flex-wrap">
+              {
+                ORDER_TYPES.map((type) => (
+                  <Button
+                    key={type.value}
+                    onClick={() => setTypeState(type.label)}
+                    variant="secondary"
+                    //variant={type.label === typeState ? "default" : "secondary"}
+                    //className="h-7 rounded-full text-xs "
+                    className={cn(
+                      " text-xs h-7  px-4 py-1 rounded-full transition-all duration-200",
+                      type.label === typeState ? " border-2 border-primary " : ""
+                    )}
+                  >
+                    {type.label}
+                  </Button>
+                ))
+              }
+            </Rows>
+            <FieldDescription>
+              Initial type is Facture
+            </FieldDescription>
+          </Field>
+
+        </FieldSet>
+      </FieldSet>
+      {
+        typeState === "Bon de Livraison" && <ShippingInfo />
+      }
+      <Button
+      >
+        <Settings2 className="w-4 h-4" /> Advanced Settings
+      </Button>
+      <FieldSeparator />
+    </FieldGroup >
+  )
+}
+
+
+function ShippingInfo() {
+  return (
+    <FieldGroup className="w-full">
+      <FieldSeparator />
+      <FieldSet className="w-full">
+        <FieldLegend className="w-full">
+          <Rows className="justify-between items-center gap-2">
+            <Label className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
+              Shipping Information
+            </Label>
+            {/* <SelectedPill title="Shipping" /> */}
+          </Rows>
+        </FieldLegend>
+        <FieldDescription>
+          Enter your shipping information
+        </FieldDescription>
+        <Field>
+          <FieldLabel className="w-full">
+            {/* <Label className="text-sm font-medium uppercase tracking-wider text-muted-foreground"> */}
+            Shipping Address
+            {/* </Label> */}
+          </FieldLabel>
+          <Input placeholder="Enter your shipping address" />
+          <FieldDescription>
+            Enter your shipping address
+          </FieldDescription>
+        </Field>
+        <Field>
+          <FieldLabel className="w-full">
+            {/* <Label className="text-sm font-medium uppercase tracking-wider text-muted-foreground"> */}
+            Shipping Method
+            {/* </Label> */}
+          </FieldLabel>
+          <Input placeholder="Enter your shipping method" />
+          <FieldDescription>
+            Enter your shipping method
+          </FieldDescription>
+        </Field>
+      </FieldSet>
+    </FieldGroup>
+  )
+
+}
+
+function PaymentMode() {
+  return (
+    <div className="space-y-2">
+      <FieldGroup className="w-full ">
+        <FieldSet className="w-full">
+          <FieldLegend variant="label" className="w-full">
+            <Rows className="justify-between items-center gap-2">
+              <Label className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
+                Payment Mode
+              </Label>
+              {/* <SelectedPill title="Espèce" /> */}
+            </Rows>
+          </FieldLegend>
+          <FieldDescription>
+            Select by which payment mode you want to filter your order.
+          </FieldDescription>
+          <FieldGroup className="gap-3">
+            <Field >
+              <Select
+                defaultValue="espece"
+              >
+                <SelectTrigger className="h-10 w-full">
+                  <SelectValue placeholder="select payment mode" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="espece">
+                    <div className="flex items-center gap-2">
+                      <Wallet className="w-3.5 h-3.5" /> Espèce
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="cheque">
+                    <div className="flex items-center gap-2">
+                      <Receipt className="w-3.5 h-3.5" /> Chèque
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="effet">
+                    <div className="flex items-center gap-2">
+                      <Banknote className="w-3.5 h-3.5" /> Effet
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="virement">
+                    <div className="flex items-center gap-2">
+                      <CreditCard className="w-3.5 h-3.5" /> Virement
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <FieldDescription>
+                Initial mode is Espèce
+              </FieldDescription>
+            </Field>
+          </FieldGroup>
+          <FieldSeparator />
+        </FieldSet>
+
+      </FieldGroup>
+    </div>
+  )
+}
+
+
+function PaymentStatus() {
+  const [status, setStatus] = useState<string>("pending");
+  return (
+    <div className="space-y-2">
+      <FieldGroup className="w-full ">
+        <FieldSet className="w-full">
+          <FieldLegend variant="label" className="w-full">
+            <Rows className="justify-between items-center gap-2">
+              <Label className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
+                Payment Status
+              </Label>
+              {/* <SelectedPill title={status} /> */}
+            </Rows>
+          </FieldLegend>
+          <FieldDescription>
+            Select by which payment status you want to filter your order.
+          </FieldDescription>
+          <FieldGroup className="gap-3">
+            <RadioGroup value={status} onValueChange={setStatus}>
+              <Field orientation="horizontal">
+                <RadioGroupItem
+                  value="pending"
+                />
+                <FieldLabel>
+                  <Clock className="w-3.5 h-3.5" />
+                  Pending
+                </FieldLabel>
+              </Field>
+
+              <Field orientation="horizontal">
+                <RadioGroupItem
+                  value="paid"
+                />
+                <FieldLabel>
+                  <Check className="w-3.5 h-3.5" />
+                  Paid
+                </FieldLabel>
+              </Field>
+
+              <Field orientation="horizontal">
+                <RadioGroupItem
+                  value="partially-paid"
+                />
+                <FieldLabel>
+                  <Minus className="w-3.5 h-3.5" />
+                  Partially Paid
+                </FieldLabel>
+              </Field>
+
+              <Field orientation="horizontal">
+                <RadioGroupItem
+                  value="cancelled"
+                />
+                <FieldLabel>
+                  <X className="w-3.5 h-3.5" />
+                  Cancelled
+                </FieldLabel>
+              </Field>
+            </RadioGroup>
+          </FieldGroup>
+          <FieldDescription>
+            Initial status is pending
+          </FieldDescription>
+        </FieldSet>
+      </FieldGroup>
+    </div>
+  )
+}
+
+
+
+function SelectedPill({
+  title,
+}: {
+  title: string;
+}) {
+  return (
+    <div className="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/40 rounded-full pl-2 pr-1 py-1">
+      <div className="w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center">
+        <Check className="w-2.5 h-2.5 text-white" />
+      </div>
+      <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 max-w-[100px] truncate pr-2">
+        {title}
+      </span>
+      {/* <button */}
+      {/*   className="w-4 h-4 rounded-full hover:bg-emerald-200/60 dark:hover:bg-emerald-800/40 flex items-center justify-center transition-colors" */}
+      {/* > */}
+      {/*   <X className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400" /> */}
+      {/* </button> */}
+    </div>
+  );
+}
+

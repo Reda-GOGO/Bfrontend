@@ -28,7 +28,7 @@ export default function Create() {
           <div className="@[768px]/main:col-span-1 max-lg:py-4 flex flex-col gap-2">
             <CustomerForm />
             <TypeForm />
-            <ShippingForm />
+            {/* <ShippingForm /> */}
             {/* <OrderPaymentModeCreate /> */}
           </div>
         </div>
