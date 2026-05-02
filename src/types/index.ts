@@ -127,7 +127,7 @@ export type Order = {
   partiallyPaidIn?: number | null;
   totalAmountString: string;
   status: string; // e.g., "Pending", "Completed"
-  type: string;
+  type: "Facture" | "Bon de Livraison" | "Bon de Commande" | "Devis" | "None";
   paymentMode?: string | null;
   paymentRef?: string;
   orderRef?: string;

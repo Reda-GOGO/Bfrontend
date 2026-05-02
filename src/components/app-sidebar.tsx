@@ -281,7 +281,7 @@ export function Layout() {
                   </div>
                 </div>
                 <ThemeToggle />
-                {/* <FullscreenToggle /> */}
+                <FullscreenToggle />
               </div>
               <CommandDialog open={open} onOpenChange={setOpen}>
                 <CommandInput

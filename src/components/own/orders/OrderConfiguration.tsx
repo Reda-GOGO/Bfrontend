@@ -85,14 +85,6 @@ const ORDER_TYPES = [
 ];
 
 export default function OrderConfiguration() {
-  const [orderType, setOrderType] = useState<string>("none");
-  const [isManualRef, setIsManualRef] = useState(false);
-  const [reference, setReference] = useState("REF-2026-001");
-
-  // Find the active icon to display in the SelectTrigger
-  // const ActiveIcon = useMemo(() => {
-  //   return ORDER_TYPES.find((t) => t.value === orderType)?.icon || FileText;
-  // }, [orderType]);
 
   return (
     <Card className="w-full  mx-auto shadow-md border-muted-foreground/10">

@@ -27,7 +27,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Empty,
   EmptyContent,
@@ -37,7 +37,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty.tsx";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area.tsx";
-import { useOrderCollectionLoader, useOrderProductLoader, type SelectedItem } from "@/application/orders/hooks/useOrder.tsx";
+import { useOrderCollectionLoader, type SelectedItem } from "@/application/orders/hooks/useOrder.ts";
 import type { Collection, OrderItem, Product, ProductUnit } from "@/types/index.ts";
 import { ProductImage } from "@/components/shared/ProductImage.tsx";
 import { cn, formatMAD } from "@/lib/utils.ts";
@@ -52,13 +52,10 @@ import {
 } from "@/components/ui/select.tsx";
 import Col from "@/components/shared/Col.tsx";
 import Row from "@/components/shared/Row.tsx";
-import useOrderItems, { type OrderItemsHook } from "@/application/orders/hooks/useOrderItems";
+import { type OrderItemsHook } from "@/application/orders/hooks/useOrderItems";
 
-export default function ProductForm() {
+export default function ProductForm({ hook }: { hook: OrderItemsHook }) {
   const [open, setOpen] = useState(false);
-  const hook = useOrderItems();
-  console.log("orderItems : ", hook.orderItems)
-  console.log("selected items : ", hook.selected)
 
   const editOrderLine = (item: OrderItem) => {
     hook.setSearch(item.name);
@@ -102,10 +99,9 @@ export default function ProductForm() {
           {
 
             hook.orderItems.length > 0 ? (
-              <OrderItems hook={hook} editOrderLine={editOrderLine} />
+              <OrderItems hook={hook} editOrderLine={editOrderLine} removeOrderLine={hook.removeItem} />
             )
               : (
-
                 <EmptyProducts />
               )
           }
@@ -118,10 +114,13 @@ export default function ProductForm() {
 
 function OrderItems({
   hook,
-  editOrderLine
+  editOrderLine,
+  removeOrderLine
 }: {
   hook: OrderItemsHook,
-  editOrderLine: (item: OrderItem) => void
+  editOrderLine: (item: OrderItem) => void;
+  removeOrderLine: (productId: number) => void;
+
 }) {
   const { orderItems } = hook;
   return (
@@ -132,6 +131,7 @@ function OrderItems({
             key={item.product?.handle}
             item={item}
             editOrderLine={editOrderLine}
+            removeOrderLine={removeOrderLine}
           />
         ))}
       </div>
@@ -143,10 +143,13 @@ function OrderItems({
 
 function OrderLine({
   item,
-  editOrderLine
+  editOrderLine,
+  removeOrderLine
+
 }: {
-  item: OrderItem,
-  editOrderLine: (item: OrderItem) => void
+  item: OrderItem;
+  editOrderLine: (item: OrderItem) => void;
+  removeOrderLine: (productId: number) => void;
 }) {
   return (
     <div className="group flex items-center gap-3.5 rounded-xl border border-border/50 bg-card px-4 py-3.5 transition-colors hover:border-border">
@@ -172,17 +175,34 @@ function OrderLine({
             <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground/70">
               Unit
             </span>
-            <span className="text-[13px] text-foreground">
-              {item.product.unit}
-            </span>
+
+            <div className="flex text-[13px] items-center gap-1.5">
+              {item.unit !== item.productUnit.name ? (
+                <>
+                  <del className="text-muted-foreground">{item.productUnit.name}</del>
+                  <span>{item.unit}</span>
+                </>
+              ) : (
+                <span>{item.unit}</span>
+              )}
+            </div>
           </div>
           <div className="flex flex-col gap-0.5 pl-3">
             <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground/70">
               Unit price
             </span>
-            <span className="text-[13px] text-foreground">
-              {formatMAD(item.unitPrice)} MAD
-            </span>
+
+            <Row className="gap-1 items-center">
+              {item.unitPrice !== item.productUnit.price && (
+                <span className="text-[10px] text-foreground">
+                  <del>{formatMAD(item.productUnit.price)} MAD</del>
+                </span>
+              )}
+              <span className="text-[13px] text-foreground">
+                {formatMAD(item.unitPrice)} MAD
+              </span>
+
+            </Row>
           </div>
           <div className="flex flex-col gap-0.5 pl-3">
             <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground/70">
@@ -201,9 +221,18 @@ function OrderLine({
           </span>
           <div className="flex items-center gap-2">
             <span className="text-[11px] text-muted-foreground">Total</span>
-            <span className="text-[15px] font-medium text-foreground">
-              {formatMAD(item.totalAmount)} MAD
-            </span>
+            <Row className="gap-1 items-center">
+              {
+                item.totalAmount !== item.unitPrice * item.quantity && (
+                  <span className="text-[10px] text-foreground">
+                    <del>{formatMAD(item.unitPrice * item.quantity)} MAD</del>
+                  </span>
+                )
+              }
+              <span className="text-[15px] font-medium text-foreground">
+                {formatMAD(item.totalAmount)} MAD
+              </span>
+            </Row>
           </div>
         </div>
       </div>
@@ -220,6 +249,7 @@ function OrderLine({
         </Button>
         <Button
           variant="outline"
+          onClick={() => removeOrderLine(item.product.id)}
           size="icon"
           className="h-[30px] w-[30px] rounded-lg border-border/50 text-muted-foreground transition-colors hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
         >
@@ -475,74 +505,7 @@ function ProductCard({
   patchItem: (productId: number, patch: Partial<SelectedItem>) => void
 }) {
   const isAdded = selected.has(product.id);
-  // console.log("isAdded : ", isAdded)
-  // console.log("selected : ", selected.get(product.id)?.verified)
-  // console.log("condition : ", isAdded && selected.get(product.id)?.verified)
   return (
-    // <div
-    //
-    //   className={cn(
-    //     "group relative flex items-center w-full p-3  gap-1 rounded-xl border transition-all duration-200 cursor-pointer select-none",
-    //     isAdded
-    //       ? "bg-primary/[0.03] border-primary ring-1 ring-primary/20 shadow-sm"
-    //       : "bg-card hover:bg-accent/50 hover:border-accent-foreground/10",
-    //   )}
-    //
-    // >
-    //   <PictureArea product={product} selected={isAdded} />
-    //   <Col className="w-full">
-    //     <Highlight product={product} selected={isAdded} />
-    //     {
-    //       isAdded && (
-    //
-    //         <Col className="gap-4">
-    //           <div className="grid grid-cols-3 gap-2  justify-between items-center">
-    //             <UnitInput
-    //               product={product}
-    //               isAdded={isAdded}
-    //               patchItem={patchItem}
-    //               selected={selected}
-    //             />
-    //             <QuantityInput
-    //               isAdded={isAdded}
-    //               product={product}
-    //               patchItem={patchItem}
-    //               selected={selected}
-    //             />
-    //             <PriceInput
-    //               product={product}
-    //               isAdded={isAdded}
-    //               patchItem={patchItem}
-    //               selected={selected} />
-    //           </div>
-    //
-    //           <Row className="items-center justify-between gap-2">
-    //             <TotalAmount
-    //               product={product}
-    //               isAdded={isAdded}
-    //               patchItem={patchItem}
-    //               selected={selected}
-    //             />
-    //           </Row>
-    //         </Col>
-    //       )
-    //     }
-    //   </Col>
-    //
-    //   {
-    //     isAdded ? (
-    //       <span onClick={() => removeItem(product.id)} className="p-2" >
-    //         <Trash2 className="h-4 w-4 text-primary  hover:text-red-500 " />
-    //       </span>
-    //     ) : (
-    //       <Button onClick={() => addItem(product)} size={"sm"} variant="default" type="button" className="cursor-pointer" >
-    //         <Plus />
-    //         Add
-    //       </Button>
-    //     )
-    //   }
-    // </div>
-
     <div className={cn("group flex items-center gap-3.5 rounded-xl border-2 border-border bg-card px-4 py-3.5 transition-colors ",
       isAdded ?
         !selected.get(product.id)?.verified ?
@@ -690,83 +653,102 @@ function UnitView({
   )
 }
 
-function TotalAmount({
-  product,
-  patchItem,
-  selected
-}: {
-  product: Product,
-  patchItem: (productId: number, patch: Partial<SelectedItem>) => void,
-  selected: Map<number, SelectedItem>
-}) {
+function TotalAmount({ product, patchItem, selected }) {
   const [editing, setEditing] = useState(false);
-  const [total, setTotal] = useState<number>(selected.get(product.id)?.totalAmount ?? product.price);
+  const item = selected.get(product.id)!;
+
+  const computedTotal = parseFloat(parseFloat(item.unitPrice * item.quantity).toFixed(2));
+  const hasCustomTotal = item.totalAmount !== computedTotal;
+
+  const [draft, setDraft] = useState<number>(item.totalAmount);
+
+  // Sync draft from external changes, but only when not editing
+  useEffect(() => {
+    if (!editing) {
+      setDraft(item.totalAmount);
+    }
+  }, [item.totalAmount, editing]);
+
+  // Reset totalAmount to computed ONLY when price or quantity actually changes
+  const prevPriceRef = useRef(item.unitPrice);
+  const prevQtyRef = useRef(item.quantity);
+
+  useEffect(() => {
+    const priceChanged = prevPriceRef.current !== item.unitPrice;
+    const qtyChanged = prevQtyRef.current !== item.quantity;
+
+    if (priceChanged || qtyChanged) {
+      patchItem(product.id, { totalAmount: computedTotal });
+    }
+
+    prevPriceRef.current = item.unitPrice;
+    prevQtyRef.current = item.quantity;
+  }, [item.unitPrice, item.quantity]);
+
+  const handleConfirm = () => {
+    patchItem(product.id, { totalAmount: draft });
+    setEditing(false);
+  };
+
+  const handleCancel = () => {
+    setDraft(item.totalAmount);
+    setEditing(false);
+  };
 
   return (
     <div className="flex items-center justify-between border-t border-border/50 pt-2">
       <span className="text-[11px] text-muted-foreground">
-        {selected.get(product.id)?.quantity} {product.unit} × {formatMAD(product.price)} MAD
+        {item.quantity} {item?.unitLabel} × {formatMAD(item.unitPrice)} MAD
       </span>
       <div className="flex items-center gap-2">
         <span className="text-[11px] text-muted-foreground">Total</span>
-        {
-          total !== product.price && (
 
-            <span className="text-[15px] font-medium text-foreground">
-              <del>{formatMAD(product.price)} MAD</del>
-            </span>
-          )
-        }
-        {
-          editing ? (
+        {hasCustomTotal && (
+          <span className="text-[15px] font-medium text-foreground">
+            <del>{formatMAD(computedTotal)} MAD</del>
+          </span>
+        )}
 
-            <Row className="gap-0.5">
-              <Input
-                type="number"
-                value={total}
-                onChange={(e) => setTotal(Number(e.target.value))}
-                placeholder="Enter unit"
-                className="w-40 h-7 text-[13px] text-foreground text-center"
-              />
+        {editing ? (
+          <Row className="gap-0.5">
+            <Input
+              type="number"
+              value={draft}
+              onChange={(e) => setDraft(Number(e.target.value))}
+              onWheel={(e) => e.currentTarget.blur()}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleConfirm();
+                if (e.key === "Escape") handleCancel();
+              }}
+              placeholder="Enter total"
+              className="w-40 h-7 text-[13px] text-foreground text-center"
+            />
+            <Button variant="outline" onClick={handleConfirm} size="icon"
+              className="h-7 w-7 bg-emerald-100 hover:bg-emerald-200 text-emerald-500 hover:text-emerald-800">
+              <Check className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" onClick={handleCancel} size="icon"
+              className="h-7 w-7 bg-red-100 hover:bg-red-200 text-red-500 hover:text-red-800">
+              <X className="h-4 w-4" />
+            </Button>
+          </Row>
+        ) : (
+          <span className="text-[15px] font-medium text-foreground">
+            {formatMAD(item.totalAmount)} MAD
+          </span>
+        )}
 
-              <Button
-                variant="outline"
-                onClick={() => setEditing(false)}
-                size="icon"
-                className="h-7 w-7 bg-emerald-100 hover:bg-emerald-200 text-emerald-500 hover:text-emerald-800"
-              >
-                <Check className="h-4 w-4  " />
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setEditing(false)}
-                size="icon"
-                className="h-7 w-7 bg-red-100 hover:bg-red-200 text-red-500 hover:text-red-800"
-              >
-                <X className="h-4 w-4  " />
-              </Button>
-            </Row>
-          ) : (
-            <span className="text-[15px] font-medium text-foreground">
-              {formatMAD(total)} MAD
-            </span>
-          )
-        }
-        {/* <span className="text-[15px] font-medium text-foreground"> */}
-        {/*   {formatMAD(product.price)} MAD */}
-        {/* </span> */}
         <Button
           variant="outline"
-          onClick={() => setEditing(true)}
+          onClick={() => { setDraft(item.totalAmount); setEditing(true); }}
           size="icon"
-          className="h-7 w-7"
+          className={cn("h-7 w-7", editing ? "invisible" : "")}
         >
-          <Pencil className="h-2 w-2 text-muted-foreground " />
+          <Pencil className="h-2 w-2 text-muted-foreground" />
         </Button>
       </div>
     </div>
-
-  )
+  );
 }
 
 function PriceInput({
@@ -780,8 +762,17 @@ function PriceInput({
   patchItem: (productId: number, patch: Partial<SelectedItem>) => void,
   selected: Map<number, SelectedItem>
 }) {
-  const [price, setPrice] = useState<string>(product.price);
+  const item = selected.get(product.id);
+  const [price, setPrice] = useState<number>(item.unitPrice);
   const [editing, setEditing] = useState(false);
+  const patchPrice = (price: number) => {
+    patchItem(product.id, { unitPrice: price });
+    setPrice(price);
+  };
+
+  useEffect(() => {
+    setPrice(item.unitPrice);
+  }, [item.unitPrice, item.unit]);
 
   return (
 
@@ -796,7 +787,7 @@ function PriceInput({
           variant="outline"
           onClick={() => setEditing(true)}
           size="icon"
-          className="h-7 w-7"
+          className={cn("h-7 w-7", !editing ? "" : "invisible")}
         >
           <Pencil className="h-4 w-4 text-muted-foreground " />
         </Button>
@@ -807,6 +798,9 @@ function PriceInput({
             <Input
               type="number"
               value={price}
+              onChange={(e) => patchPrice(Number(e.target.value))}
+              onWheel={(e) => e.currentTarget.blur()}
+              onKeyDown={(e) => e.key === "Enter" && setEditing(false)}
               placeholder="Enter unit"
               className="h-7 text-[13px] text-foreground text-center"
             />
@@ -830,9 +824,17 @@ function PriceInput({
           </Row>
 
         ) : (
-          <span className="text-[13px] text-foreground">
-            {formatMAD(product.price)} MAD
-          </span>
+          <Row className="gap-1 items-center">
+            {price !== item.unit.price && (
+              <span className="text-[10px] text-foreground">
+                <del>{formatMAD(item.unit.price)} MAD</del>
+              </span>
+            )}
+            <span className="text-[13px] text-foreground">
+              {formatMAD(price)} MAD
+            </span>
+
+          </Row>
 
         )
       }
@@ -851,90 +853,114 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-function UnitInput({
-  isAdded,
-  product,
-  patchItem,
-  selected
-}: {
-  isAdded: boolean,
-  product: Product,
-  patchItem: (productId: number, patch: Partial<SelectedItem>) => void,
-  selected: Map<number, SelectedItem>
-}) {
-  const [unit, setUnit] = useState<string>(product.unit);
+function UnitInput({ isAdded, product, patchItem, selected }) {
+  const item = selected.get(product.id);
+  const savedLabel = item.unitLabel;
+
   const [isRenaming, setIsRenaming] = useState(false);
+  const [draft, setDraft] = useState<string>(savedLabel);
+
+  // Sync draft when item changes externally (e.g. dialog reopened)
+  useEffect(() => {
+    if (!isRenaming) {
+      setDraft(savedLabel);
+    }
+  }, [savedLabel, isRenaming]);
+
+  const handleUnitSelect = (unit: ProductUnit) => {
+    patchItem(product.id, { unitLabel: unit.name, unit: unit, unitPrice: unit.price });
+  };
+
+  const handleConfirm = () => {
+    patchItem(product.id, { unitLabel: draft });
+    setIsRenaming(false);
+  };
+
+  const handleCancel = () => {
+    setDraft(savedLabel); // revert to last saved
+    setIsRenaming(false);
+  };
+
+  const isRenamed = savedLabel !== product.unit;
 
   return (
     <div className="flex flex-col gap-0.5">
       <div className="flex justify-between items-center gap-2">
-
         <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground/70">
           Unit
         </span>
         <Button
           variant="outline"
           size="icon"
-          onClick={() => setIsRenaming(true)}
-          className="h-7 w-7"
+          onClick={() => { setDraft(savedLabel); setIsRenaming(true); }}
+          className={cn("h-7 w-7", isRenaming ? "invisible" : "")}
         >
-          <Pencil className="h-4 w-4 text-muted-foreground " />
+          <Pencil className="h-4 w-4 text-muted-foreground" />
         </Button>
       </div>
+
       <div className="flex items-center w-full gap-2">
-        <DropdownMenu>
-          <DropdownMenuTrigger className="">
-            <div className="flex text-[13px] items-center gap-2">
-              <del>{unit}</del>
-            </div>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent >
-            <DropdownMenuRadioGroup value={unit} onValueChange={setUnit}>
-              {product.units?.map((unit) => (
-                <DropdownMenuRadioItem className="h-7" key={unit.name} value={unit.name}>
-                  <div className="flex items-center gap-2">
-                    {unit.name}
-                  </div>
-                </DropdownMenuRadioItem>
-              ))}
-            </DropdownMenuRadioGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        {
-          isRenaming && (
-
-            <Row className="gap-0.5">
-              <Input
-                type="text"
-                value={unit}
-                placeholder="Enter unit"
-                className="h-7 text-[13px] text-foreground text-center"
-              />
-
-              <Button
-                variant="outline"
-                onClick={() => setIsRenaming(false)}
-                size="icon"
-                className="h-7 w-7 bg-emerald-100 hover:bg-emerald-200 text-emerald-500 hover:text-emerald-800"
-              >
-                <Check className="h-4 w-4  " />
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setIsRenaming(false)}
-                size="icon"
-                className="h-7 w-7 bg-red-100 hover:bg-red-200 text-red-500 hover:text-red-800"
-              >
-                <X className="h-4 w-4  " />
-              </Button>
-            </Row>
-          )
-        }
+        {isRenaming ? (
+          <Row className="gap-0.5">
+            <Input
+              type="text"
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleConfirm();
+                if (e.key === "Escape") handleCancel();
+              }}
+              placeholder="Enter unit label"
+              className="h-7 text-[13px] text-foreground text-center"
+              autoFocus
+            />
+            <Button
+              variant="outline"
+              onClick={handleConfirm}
+              size="icon"
+              className="h-7 w-7 bg-emerald-100 hover:bg-emerald-200 text-emerald-500 hover:text-emerald-800"
+            >
+              <Check className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleCancel}
+              size="icon"
+              className="h-7 w-7 bg-red-100 hover:bg-red-200 text-red-500 hover:text-red-800"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </Row>
+        ) : (
+          <DropdownMenu>
+            <DropdownMenuTrigger>
+              <div className="flex text-[13px] items-center gap-1.5">
+                {savedLabel !== item.unit.name ? (
+                  <>
+                    <del className="text-muted-foreground">{item.unit.name}</del>
+                    <span>{savedLabel}</span>
+                  </>
+                ) : (
+                  <span>{savedLabel}</span>
+                )}
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuRadioGroup value={savedLabel} onValueChange={handleUnitSelect}>
+                {product.units?.map((u) => (
+                  <DropdownMenuRadioItem className="h-7" key={u.name} value={u}>
+                    <div className="flex items-center gap-2">
+                      {u.name}
+                    </div>
+                  </DropdownMenuRadioItem>
+                ))}
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
     </div>
-
-  )
-
+  );
 }
 
 function QuantityInput({

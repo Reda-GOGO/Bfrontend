@@ -1,7 +1,7 @@
 import { productApi } from "@/application/products/api/product.api";
 import { debounce } from "@/lib/utils";
-import type { Product, ProductUnit, OrderItem } from "@/types";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { OrderItem, Product, ProductUnit } from "@/types";
+import { useState, useCallback, useEffect, useMemo } from "react";
 
 export type SelectedItem = {
   product: Product;
@@ -9,67 +9,87 @@ export type SelectedItem = {
   unitLabel: string; // editable display name for the unit
   quantity: number;
   unitPrice: number;
+  totalAmount: number;
   verified: boolean;
 };
 
-export type ProductFormHook = ReturnType<typeof useProductForm>;
+export type OrderItemsHook = ReturnType<typeof useOrderItems>;
+export default function useOrderItems() {
+  const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+  const [search, setSearch] = useState<string>("");
+  const [collectionHandle, setCollectionHandle] = useState<string>("");
+  const [collectionName, setCollectionName] = useState<string>("All Collections");
 
-export function useProductForm() {
-  // ── Search & pagination ──────────────────────────────────────────────────
-  const [search, setSearch] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
     totalCount: 0,
-    limit: 12,
+    limit: 10,
+    totalItems: 0,
   });
-  const [debouncedSearch, setDebouncedSearch] = useState("");
 
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
+
+  // 1. Handle Debounce
   const debounceSearch = useMemo(
-    () => debounce((v: string) => setDebouncedSearch(v), 400),
-    []
+    () => debounce((value: string) => setDebouncedSearch(value), 1000),
+    [],
   );
 
-  useEffect(() => { debounceSearch(search); }, [search, debounceSearch]);
-
-  // Reset on new search term
   useEffect(() => {
-    setPagination((p) => ({ ...p, currentPage: 1 }));
-    setProducts([]);
-  }, [debouncedSearch]);
+    debounceSearch(search);
+  }, [search, debounceSearch]);
 
-  // Fetch
+  // 2. Reset list when search changes
   useEffect(() => {
-    let alive = true;
+    setPagination((prev) => ({ ...prev, currentPage: 1 }));
+    setProducts([]); // Clear list for new search
+  }, [debouncedSearch, collectionHandle]);
+
+  // 3. Fetch Data
+  useEffect(() => {
+    let isMounted = true;
     setIsLoading(true);
+
     productApi
       .getProducts({
         page: pagination.currentPage,
         search: debouncedSearch,
         limit: pagination.limit,
+        collection_handle: collectionHandle,
       })
       .then((res) => {
-        if (!alive) return;
-        setProducts((prev) =>
-          pagination.currentPage === 1
+        if (!isMounted) return;
+
+        setProducts((prev) => {
+          // If we are on page 1, replace the list. Otherwise, append.
+          return pagination.currentPage === 1
             ? res.products
-            : [...prev, ...res.products]
-        );
-        setPagination((p) => ({
-          ...p,
+            : [...prev, ...res.products];
+        });
+
+        setPagination((prev) => ({
+          ...prev,
           totalPages: res.totalPages,
           totalCount: res.totalCount,
+          totalItems: res.totalItems,
         }));
       })
-      .finally(() => { if (alive) setIsLoading(false); });
-    return () => { alive = false; };
-  }, [pagination.currentPage, pagination.limit, debouncedSearch]);
+      .finally(() => {
+        if (isMounted) delay(2000).then(() => setIsLoading(false));
+      });
 
+    return () => {
+      isMounted = false;
+    };
+  }, [pagination.currentPage, pagination.limit, debouncedSearch, collectionHandle]);
+
+  // 4. Load More helper
   const loadMore = useCallback(() => {
     if (!isLoading && pagination.currentPage < pagination.totalPages) {
-      setPagination((p) => ({ ...p, currentPage: p.currentPage + 1 }));
+      setPagination((prev) => ({ ...prev, currentPage: prev.currentPage + 1 }));
     }
   }, [isLoading, pagination.currentPage, pagination.totalPages]);
 
@@ -87,6 +107,7 @@ export function useProductForm() {
         unitLabel: defaultUnit.name,
         quantity: 1,
         unitPrice: defaultUnit.price,
+        totalAmount: defaultUnit.price,
         verified: false,
       });
     });
@@ -112,23 +133,25 @@ export function useProductForm() {
   const orderItems: Omit<OrderItem, "id" | "orderId" | "createdAt" | "updatedAt">[] = useMemo(
     () =>
       Array.from(selected.values())
-        .filter((i) => i.verified)
+        // .filter((i) => i.verified)
         .map((i) => ({
           name: i.product.name,
           quantity: i.quantity,
           unitPrice: i.unitPrice,
-          totalAmount: i.quantity * i.unitPrice,
+          totalAmount: i.totalAmount,
           unitProfit: i.unitPrice - i.unit.cost,
           totalProfit: (i.unitPrice - i.unit.cost) * i.quantity,
           unit: i.unitLabel,
+          productUnit: i.unit,
           productUnitId: i.unit.id,
           productId: i.product.id,
+          product: i.product,
         })),
     [selected]
   );
 
   const totalAmount = useMemo(
-    () => Array.from(selected.values()).reduce((s, i) => s + i.quantity * i.unitPrice, 0),
+    () => Array.from(selected.values()).reduce((s, i) => s + i.totalAmount, 0),
     [selected]
   );
 
@@ -136,14 +159,20 @@ export function useProductForm() {
     () => Array.from(selected.values()).some((i) => !i.verified),
     [selected]
   );
-
   return {
-    search, setSearch,
-    products, isLoading, pagination,
+    search,
+    setSearch,
+    collectionHandle,
+    setCollectionHandle,
+    collectionName,
+    setCollectionName,
+    pagination,
+    products,
+    isLoading,
     loadMore,
-    hasMore: pagination.currentPage < pagination.totalPages,
     selected, addItem, removeItem, patchItem,
     orderItems, totalAmount, hasUnverified,
     selectedCount: selected.size,
+    hasMore: pagination.currentPage < pagination.totalPages,
   };
-}
+} 

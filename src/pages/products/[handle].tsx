@@ -33,6 +33,8 @@ import {
   BarChart3,
   DollarSign,
   Percent,
+  User,
+  Phone,
 } from "lucide-react";
 import type { Product } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -45,7 +47,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import useMediaQuery from "@/hooks/useMediaQuery";
-import AdditionalInfoCard from "@/components/own/products/AdditionalInfoCard";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from "recharts";
 import {
   ChartContainer,
@@ -54,6 +55,10 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart";
 import { cn } from "@/lib/utils";
+import Col from "@/components/shared/Col";
+import Row from "@/components/shared/Row";
+import { Input } from "@/components/ui/input";
+import { Field, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
 
@@ -114,14 +119,8 @@ export default function ProductOverview() {
           <ProductHero product={product} />
           <div className="flex flex-col gap-5">
             <ProductChart productName={product.name} />
-            <PricingStatsCard product={product} />
+            <AdditionalInfoCard product={product} />
           </div>
-        </div>
-
-        <Separator className="bg-border/40" />
-
-        <div className="grid grid-cols-1 @[760px]:grid-cols-1 gap-5">
-          <AdditionalInfoCard product={product} />
         </div>
       </div>
     </Back>
@@ -256,18 +255,22 @@ export function ProductHero({ product }: { product: Product }) {
 
   const StockIcon = stockStatus.icon;
 
+  const profit = product.price - product.cost;
+  const margin = product.price > 0 ? (profit / product.price) * 100 : 0;
+  const trend = margin > 0 ? "up" : "down"
+  const formatedMargin = margin.toFixed(2)
   return (
     <Card className="overflow-hidden border-border/50 shadow-sm">
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
-          <Info className="w-3.5 h-3.5 text-primary" />
+          <Package className="w-3.5 h-3.5 text-primary" />
           <CardTitle className="text-sm font-semibold tracking-wide uppercase text-muted-foreground">
             Product Overview
           </CardTitle>
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-5 pb-5">
+      <CardContent className="space-y-5 pb-5 flex flex-col gap-4 h-full justify-around">
         {/* Image */}
         <div className="flex items-center justify-center w-full">
 
@@ -282,7 +285,7 @@ export function ProductHero({ product }: { product: Product }) {
           </div>
         </div>
         {/* Name + description */}
-        <div className="space-y-2">
+        <div className="space-y-2 ">
           <h2 className="text-xl font-black tracking-tight text-foreground leading-tight lowercase first-letter:uppercase">
             {product.name || "Untitled Product"}
           </h2>
@@ -291,143 +294,369 @@ export function ProductHero({ product }: { product: Product }) {
           </p>
         </div>
 
-        {/* Stock indicator */}
-        <div className="space-y-2 p-3 rounded-xl bg-muted/20 border border-border/30">
-          <div className="flex items-center justify-between text-sm">
-            <div className={cn("flex items-center gap-1.5 font-medium text-xs", stockStatus.color)}>
-              <StockIcon className="w-3.5 h-3.5" />
-              {stockStatus.label}
-            </div>
-            <span className="font-semibold text-sm tabular-nums">
-              {formatNumber(product.availableQty)}{" "}
-              <span className="text-xs text-muted-foreground font-normal">
-                {product.unit}
+        {/* Pricing Section */}
+        <div className="flex w-full  ">
+          <div className="grid grid-cols-3 divide-x divide-border/50 w-full">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[14px] font-bold uppercase tracking-widest text-muted-foreground/70">
+                Selling Price
               </span>
-            </span>
+              <span className="text-[16px] text-foreground">
+                {formatMAD(product.price)}
+              </span>
+
+              <span className="text-[12px] uppercase text-muted-foreground">
+                per  1 {product.unit}
+              </span>
+            </div>
+            <div className="flex flex-col gap-0.5 pl-3">
+              <span className="text-[14px] font-bold uppercase tracking-widest text-muted-foreground/70">
+                Cost Price
+              </span>
+              <span className="text-[16px] text-foreground">
+                {formatMAD(product.cost)}
+              </span>
+              <span className="text-[12px] uppercase text-muted-foreground">
+                per  1 {product.unit}
+              </span>
+            </div>
+            <div className="flex flex-col gap-0.5 pl-3">
+              <span className="text-[14px] font-bold uppercase tracking-widest text-muted-foreground/70">
+                Margin Profit (%)
+              </span>
+              <span className="flex gap-2 text-[16px] text-foreground">
+                {formatMAD(profit)} &nbsp;
+
+                <span
+                  className={cn(
+                    "text-[11px] flex items-center gap-1",
+                    trend === "up"
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : trend === "down"
+                        ? "text-destructive"
+                        : "text-muted-foreground/60"
+                  )}
+                >
+                  ({formatedMargin}%)
+                  {trend === "up" && <TrendingUp className="w-3 h-3" />}
+                  {trend === "down" && <TrendingDown className="w-3 h-3" />}
+                </span>
+              </span>
+
+            </div>
           </div>
-          <Progress
-            value={stockStatus.pct}
-            className="h-1.5"
-          />
+
         </div>
 
-        {/* Tags */}
-        <div className="flex flex-wrap gap-2">
-          <Badge variant="secondary" className="text-xs">
-            {product.units?.length || 0} Unit variant{(product.units?.length || 0) !== 1 ? "s" : ""}
-          </Badge>
-          {product.vendorName && (
-            <Badge variant="outline" className="text-xs text-muted-foreground">
-              {product.vendorName}
-            </Badge>
-          )}
-          <Badge
-            variant="outline"
-            className="text-xs bg-primary/5 text-primary border-primary/15"
-          >
-            {product.unit} base unit
-          </Badge>
+
+        {/* Unit Section */}
+
+        <div className="flex h-full flex-col p-4 rounded-xl w-full gap-2">
+          <span className="text-sm text-muted-foreground uppercase tracking-widest " >
+            Unit &amp; Variants
+          </span>
+          <div className="grid grid-cols-2 gap-2  w-full" >
+            <div className="flex p-1 flex-col">
+              <span className="text-[12px] uppercase font-semibold text-muted-foreground/80">
+                Default
+              </span>
+              <Badge
+                variant={"outline"}
+              >
+                {product.unit}
+              </Badge>
+            </div>
+
+
+            <div className="flex p-1 flex-col ">
+              <span className="text-[12px] uppercase font-semibold text-muted-foreground/80">
+                Variants
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="text-[12px]">up to</span>
+                <span className="font-bold ">
+                  {product.units?.length || 1}
+                </span>
+                <Layers className="w-3 h-3 " />
+                <span className="text-[12px]"> variant(s)</span>
+              </span>
+            </div>
+
+          </div>
+
+          {
+            product.units?.length > 1 && (
+              <div className="w-full">
+                {
+                  product.units?.filter(unit => unit.isBase === false)
+                    .map((unit) => (
+                      <Variants unit={unit} product={product} />
+                    ))
+                }
+              </div>
+            )
+          }
         </div>
+
+
       </CardContent>
     </Card>
   );
 }
 
-// ─── PricingStatsCard ─────────────────────────────────────────────────────────
 
-function PricingStatsCard({ product }: { product: Product }) {
+
+
+function Variants({ unit, product }: { unit: ProductUnit; product: Product }) {
+  const profit = unit.price - unit.cost;
+  const margin = unit.price > 0 ? (profit / unit.price) * 100 : 0;
+  const trend = margin > 0 ? "up" : "down";
+
+  // ring math — r=19, circumference = 2π×19 ≈ 119.38
+  const CIRC = 119.38;
+  const offset = CIRC - (Math.min(Math.max(margin, 0), 100) / 100) * CIRC;
+
+  return (
+    <div className="w-full overflow-hidden rounded-xl border border-border/40 bg-background">
+
+      {/* ── Top: name + margin ring ── */}
+      <div className="flex items-center justify-between border-b border-border/20 px-4 py-3.5">
+        <div className="flex flex-col gap-0.5">
+          <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground/90">
+            Variant
+          </span>
+          <span className="text-[15px] font-medium tracking-tight text-foreground">
+            {unit.name}
+          </span>
+        </div>
+
+        {/* Ring gauge */}
+        <div className="flex flex-col items-center gap-0.5">
+          <div className="relative h-12 w-12">
+            <svg
+              viewBox="0 0 48 48"
+              className="h-12 w-12 -rotate-90"
+            >
+              {/* track */}
+              <circle
+                cx="24" cy="24" r="19"
+                fill="none"
+                className="stroke-border/30"
+                strokeWidth="3.5"
+              />
+              {/* fill */}
+              <circle
+                cx="24" cy="24" r="19"
+                fill="none"
+                strokeWidth="3.5"
+                strokeLinecap="round"
+                strokeDasharray={CIRC}
+                strokeDashoffset={offset}
+                className={cn(
+                  "transition-all duration-700",
+                  trend === "up"
+                    ? "stroke-emerald-500 dark:stroke-emerald-400"
+                    : "stroke-red-500 dark:stroke-red-400"
+                )}
+              />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-[11px] font-medium text-foreground">
+                {Math.round(margin)}%
+              </span>
+            </div>
+          </div>
+          <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground/50">
+            margin
+          </span>
+        </div>
+      </div>
+
+      {/* ── Prices ── */}
+      <div className="grid grid-cols-3 divide-x divide-border/20">
+        {[
+          { label: "Selling", value: formatMAD(unit.price), accent: "" },
+          { label: "Cost", value: formatMAD(unit.cost), accent: "" },
+          {
+            label: "Profit",
+            value: `${trend === "up" ? "+" : ""}${formatMAD(profit)}`,
+            accent: trend === "up"
+              ? "text-emerald-600 dark:text-emerald-400"
+              : "text-red-600 dark:text-red-400",
+          },
+        ].map((col) => (
+          <div key={col.label} className="flex flex-col gap-1 px-4 py-3.5">
+            <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground/90">
+              {col.label}
+            </span>
+            <span className={cn("text-[15px] font-medium tracking-tight text-foreground", col.accent)}>
+              {col.value}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Conversion ── */}
+      <div className="flex items-center gap-2 border-t border-border/20 px-4 py-2.5">
+        <span className="mr-1 text-[10px] font-medium uppercase tracking-widest text-muted-foreground/50">
+          Rate
+        </span>
+
+        <div className="flex h-[26px] items-center overflow-hidden rounded-full border border-border/40">
+          <span className="flex h-full items-center px-2.5 text-[12px] font-medium text-foreground">
+            {unit.variantValue}
+          </span>
+          <div className="h-full w-px bg-border/30" />
+          <span className="flex h-full items-center bg-muted/40 px-2.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+            {unit.name}
+          </span>
+        </div>
+
+        <span className="text-[11px] text-muted-foreground/40">=</span>
+
+        <div className="flex h-[26px] items-center overflow-hidden rounded-full border border-border/40">
+          <span className="flex h-full items-center px-2.5 text-[12px] font-medium text-foreground">
+            {unit.defaultValue}
+          </span>
+          <div className="h-full w-px bg-border/30" />
+          <span className="flex h-full items-center bg-muted/40 px-2.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+            {product.unit}
+          </span>
+        </div>
+      </div>
+
+    </div>
+  );
+}
+
+// ─── AdditionalInfoCard ─────────────────────────────────────────────────────────────────
+
+function AdditionalInfoCard({ product }: { product: Product }) {
   const profit = product.price - product.cost;
   const margin = product.price > 0 ? (profit / product.price) * 100 : 0;
   const isHealthy = margin >= 20;
 
   return (
-    <Card className="border-border/50 shadow-sm">
-      <CardHeader className="pb-3">
+    <Card className="border-border/50 shadow-sm h-full">
+      <CardHeader className="pb-1">
         <div className="flex items-center gap-2">
-          <DollarSign className="w-3.5 h-3.5 text-primary" />
+          <Info className="w-3.5 h-3.5 text-primary" />
           <CardTitle className="text-sm font-semibold tracking-wide uppercase text-muted-foreground">
-            Pricing
+            Additional Info
           </CardTitle>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 gap-3">
-          <StatBlock
-            label="Selling Price"
-            value={formatMAD(product.price)}
-            sub="per unit"
-            highlight
-          />
-          <StatBlock
-            label="Cost Price"
-            value={formatMAD(product.cost)}
-            sub="per unit"
-          />
-          <StatBlock
-            label="Unit Profit"
-            value={formatMAD(profit)}
-            sub={profit >= 0 ? "positive" : "negative"}
-            trend={profit >= 0 ? "up" : "down"}
-          />
-          <StatBlock
-            label="Margin"
-            value={`${margin.toFixed(1)}%`}
-            sub={isHealthy ? "healthy" : "low margin"}
-            trend={isHealthy ? "up" : "down"}
-          />
+        <div className="flex flex-col gap-[4px] px-2">
+
+          {/* Inventory Section */}
+          <div>
+            <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-[0.09em] ">
+              Inventory
+            </h3>
+            <div className="flex items-center justify-between rounded-xl border-[0.5px]   p-3.5 px-[14px]">
+              <div className="flex flex-col gap-0.5">
+                <span className="text-[10px] font-medium uppercase tracking-[0.08em] text-slate-400">
+                  Available quantity
+                </span>
+                <div className="flex items-baseline gap-1.25">
+                  <span className="text-[22px] font-medium leading-none tracking-tight ">
+                    {product.availableQty}
+                  </span>
+                  <span className="text-[11px] font-medium uppercase tracking-[0.06em] ">
+                    {product.unit}
+                  </span>
+                </div>
+              </div>
+
+              {/* Status Badge: Change classes based on state (in, low, out) */}
+              <div className="flex items-center gap-1.25 rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-medium text-emerald-800">
+                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                In stock
+              </div>
+            </div>
+          </div>
+
+          {/* Vendor Section */}
+          <div>
+            <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-[0.09em] ">
+              Vendor
+            </h3>
+            <div className="overflow-hidden rounded-xl border-[0.5px] ">
+
+              {/* Vendor Name Row */}
+              <div className="flex items-center gap-3 px-[14px] py-[11px]">
+                <div className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-lg border-[0.5px] ">
+                  <User className="h-3.5 w-3.5 text-slate-500" />
+                </div>
+                <div className="flex min-w-0 flex-col gap-px">
+                  <span className="text-[10px] font-medium uppercase tracking-[0.07em] ">
+                    Name
+                  </span>
+                  <span className="truncate text-[13px] font-medium ">
+                    Atlas Supplies Co.
+                  </span>
+                </div>
+              </div>
+
+              {/* Vendor Contact Row */}
+              <div className="flex items-center gap-3 border-t-[0.5px]  px-[14px] py-[11px]">
+                <div className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-lg border-[0.5px] ">
+                  <Phone className="h-3.5 w-3.5 text-slate-500" />
+                </div>
+                <div className="flex min-w-0 flex-col gap-px">
+                  <span className="text-[10px] font-medium uppercase tracking-[0.07em] ">
+                    Contact
+                  </span>
+                  <span className="truncate text-[13px] font-medium ">
+                    +212 6 12 34 56 78
+                  </span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+
+          <div className="flex flex-col gap-[4px] ">
+            <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-[0.09em] ">
+              Collection
+            </h3>
+            <div className="flex items-center justify-between rounded-xl border-[0.5px]   p-3.5 px-[14px]">
+              <div className="flex flex-col gap-0.5">
+                <span className="text-[10px] font-medium uppercase tracking-[0.08em] text-slate-400">
+                  Collection Name
+                </span>
+                <div className="flex items-baseline gap-1.25">
+                  <span className="text-[22px] font-medium leading-none tracking-tight ">
+                    {product.Collection ? product.Collection.name : "No Collection"}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center justify-between rounded-xl border-[0.5px]   p-3.5 px-[14px]">
+              <div className="flex flex-col gap-0.5">
+                <span className="text-[10px] font-medium uppercase tracking-[0.08em] text-slate-400">
+                  Collection Name
+                </span>
+                <div className="flex items-center gap-2 mt-1">
+                  <LinkIcon className="w-3.5 h-3.5 text-muted-foreground" />
+                  <code className="text-[12px] bg-muted px-2 py-0.5 rounded-md font-mono text-muted-foreground italic">
+                    /{product.Collection ? product.Collection.handle : "No Collection"}
+                  </code>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+
         </div>
       </CardContent>
     </Card>
   );
 }
 
-function StatBlock({
-  label,
-  value,
-  sub,
-  highlight,
-  trend,
-}: {
-  label: string;
-  value: string;
-  sub?: string;
-  highlight?: boolean;
-  trend?: "up" | "down";
-}) {
-  return (
-    <div
-      className={cn(
-        "rounded-xl p-3 space-y-1 border",
-        highlight
-          ? "bg-primary/5 border-primary/15"
-          : "bg-muted/20 border-border/30"
-      )}
-    >
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
-        {label}
-      </p>
-      <p className={cn("text-base font-bold tabular-nums", highlight && "text-primary")}>
-        {value}
-      </p>
-      {sub && (
-        <p
-          className={cn(
-            "text-[11px] flex items-center gap-1",
-            trend === "up"
-              ? "text-emerald-600 dark:text-emerald-400"
-              : trend === "down"
-                ? "text-destructive"
-                : "text-muted-foreground/60"
-          )}
-        >
-          {trend === "up" && <TrendingUp className="w-3 h-3" />}
-          {trend === "down" && <TrendingDown className="w-3 h-3" />}
-          {sub}
-        </p>
-      )}
-    </div>
-  );
-}
 
 // ─── ProductImageCard ─────────────────────────────────────────────────────────
 
@@ -455,117 +684,9 @@ function ProductImageCard({
   );
 }
 
-// ─── UnitConversionCard ───────────────────────────────────────────────────────
 
-export function UnitConversionCard({ product }: { product?: Product }) {
-  // Use real product units if available, otherwise fall back to demo data
-  const units = product?.units ?? [];
 
-  return (
-    <Card className="border-border/50 shadow-sm">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <ArrowLeftRight className="w-3.5 h-3.5 text-primary" />
-            <CardTitle className="text-sm font-semibold tracking-wide uppercase text-muted-foreground">
-              Unit Variants
-            </CardTitle>
-          </div>
-          <Badge variant="secondary" className="text-xs">
-            {units.length} variant{units.length !== 1 ? "s" : ""}
-          </Badge>
-        </div>
-      </CardHeader>
 
-      <CardContent className="space-y-2">
-        {units.length === 0 ? (
-          <DemoUnits />
-        ) : (
-          units.map((unit, idx) => (
-            <UnitRow key={unit.id} unit={unit} isBase={unit.isBase} />
-          ))
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-function UnitRow({
-  unit,
-  isBase,
-}: {
-  unit: { name: string; price: number; cost: number; quantityInBase: number; isBase: boolean };
-  isBase: boolean;
-}) {
-  const profit = unit.price - unit.cost;
-  const margin = unit.price > 0 ? (profit / unit.price) * 100 : 0;
-
-  return (
-    <div
-      className={cn(
-        "flex items-center gap-3 rounded-xl border p-3 transition-colors",
-        isBase
-          ? "bg-primary/[0.03] border-primary/20 dark:bg-primary/[0.06]"
-          : "bg-muted/10 border-border/30 hover:bg-muted/20"
-      )}
-    >
-      {/* Unit name */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-bold uppercase tracking-wide">
-            {unit.name}
-          </span>
-          {isBase && (
-            <Badge className="text-[9px] px-1.5 py-0 h-4 bg-primary/10 text-primary border-primary/20 font-semibold">
-              BASE
-            </Badge>
-          )}
-        </div>
-        {!isBase && (
-          <p className="text-[11px] text-muted-foreground mt-0.5">
-            = {unit.quantityInBase} base unit{unit.quantityInBase !== 1 ? "s" : ""}
-          </p>
-        )}
-      </div>
-
-      {/* Price / cost */}
-      <div className="text-right shrink-0">
-        <p className="text-sm font-bold tabular-nums">{formatMAD(unit.price)}</p>
-        <p className="text-[11px] text-muted-foreground tabular-nums">
-          cost {formatMAD(unit.cost)}
-        </p>
-      </div>
-
-      {/* Margin chip */}
-      <div
-        className={cn(
-          "text-[11px] font-semibold px-2 py-1 rounded-lg tabular-nums shrink-0",
-          margin >= 20
-            ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400"
-            : "bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400"
-        )}
-      >
-        {margin.toFixed(0)}%
-      </div>
-    </div>
-  );
-}
-
-/** Shown when no real units are available */
-function DemoUnits() {
-  const demo = [
-    { name: "PCS", price: 200, cost: 120, quantityInBase: 1, isBase: true },
-    { name: "BOX", price: 650, cost: 400, quantityInBase: 3, isBase: false },
-    { name: "CARTON", price: 2200, cost: 1500, quantityInBase: 12, isBase: false },
-  ];
-  return (
-    <div className="space-y-2">
-      {demo.map((u) => (
-        <UnitRow key={u.name} unit={u} isBase={u.isBase} />
-      ))}
-    </div>
-  );
-}
 
 // ─── Chart ────────────────────────────────────────────────────────────────────
 
