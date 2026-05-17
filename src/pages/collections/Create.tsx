@@ -23,7 +23,7 @@ export default function Create() {
     toggleProduct,
     isProductSelected,
     reset,
-  } = useCollection();
+  } = useCollection({ mode: "create" });
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 

@@ -135,7 +135,7 @@ export function useOrders() {
     currentPage: 1,
     totalPages: 1,
     totalCount: 0,
-    limit: 5,
+    limit: 10,
   });
   const [selected, setSelected] = useState(new Set());
 

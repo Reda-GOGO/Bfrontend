@@ -18,6 +18,7 @@ type Props = {
 
 export default function MediaCard({ collection, setCollection }: Props) {
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+  console.log("collection in media card : ", collection);
   const formatImageUrl = (image: string | null) => {
     const isImageStored = image?.split(":").includes("blob");
     if (isImageStored) {

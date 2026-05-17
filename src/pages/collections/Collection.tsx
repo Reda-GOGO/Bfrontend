@@ -64,7 +64,7 @@ function CollectionProducts({ collection }: { collection: Collection }) {
                   key={product.id}
                   product={product}
                   isProductSelected={() => true} // Always selected in this view
-                // toggleProduct={() => { }} // You can add removal logic here
+                  toggleProduct={() => { }} // You can add removal logic here
                 />
               ))}
             </div>
@@ -98,7 +98,7 @@ function CollectionInfoCard({ collection }: { collection: Collection }) {
 
       <CardContent className="space-y-6">
         {/* Visual Preview */}
-        <div className="group relative w-full overflow-hidden rounded-xl border bg-muted/30 aspect-video flex items-center justify-center">
+        <div className="group relative w-full overflow-hidden rounded-xl border bg-muted/30 aspect-square flex items-center justify-center">
           <CollectionImage
             collection={collection}
             className="transition-transform duration-500 group-hover:scale-105"
@@ -207,12 +207,13 @@ function ProductCard({
             <Layers className="h-3 w-3 text-primary/60" />
             <span>
               {product.units?.length || 0}{" "}
-              <span className="hidden xs:inline">Variants</span>
+              <span className="inline">Variants</span>
             </span>
           </div>
           <div className="flex items-center gap-1 text-[10px] sm:text-xs text-muted-foreground font-medium">
             <Package className="h-3 w-3 text-primary/60" />
             <span>Stock: {product.availableQty}</span>
+            <span className="font-bold">{product.unit} </span>
           </div>
         </div>
       </div>

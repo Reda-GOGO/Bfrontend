@@ -53,6 +53,7 @@ import {
 import Col from "@/components/shared/Col.tsx";
 import Row from "@/components/shared/Row.tsx";
 import { type OrderItemsHook } from "@/application/orders/hooks/useOrderItems";
+import LoadItemsModal from "./LoadItemsModal";
 
 export default function ProductForm({ hook }: { hook: OrderItemsHook }) {
   const [open, setOpen] = useState(false);
@@ -87,7 +88,9 @@ export default function ProductForm({ hook }: { hook: OrderItemsHook }) {
               setOpen={setOpen}
               hook={hook}
             />
-            <Button size={"sm"}>Previous Orders</Button>
+            <LoadItemsModal
+              hook={hook}
+            />
           </div>
         </div>
         <div className="flex w-full flex-col py-4 gap-2 h-[600px]">
@@ -102,7 +105,7 @@ export default function ProductForm({ hook }: { hook: OrderItemsHook }) {
               <OrderItems hook={hook} editOrderLine={editOrderLine} removeOrderLine={hook.removeItem} />
             )
               : (
-                <EmptyProducts />
+                <EmptyProducts setOpen={setOpen} />
               )
           }
 
@@ -111,6 +114,8 @@ export default function ProductForm({ hook }: { hook: OrderItemsHook }) {
     </Card>
   );
 }
+
+
 
 function OrderItems({
   hook,
@@ -1046,7 +1051,7 @@ function PictureArea({ product, selected, className }: { product: Product, selec
 
 
 
-function EmptyProducts() {
+function EmptyProducts({ setOpen }: { setOpen: React.Dispatch<React.SetStateAction<boolean>> }) {
   return (
     <div className="flex w-full h-full items-center justify-center">
       <Empty>
@@ -1062,7 +1067,7 @@ function EmptyProducts() {
         </EmptyHeader>
         <EmptyContent>
           <div className="flex gap-2">
-            <Button variant="outline" type="button">
+            <Button onClick={() => setOpen(true)} variant="outline" type="button">
               Add Product
             </Button>
           </div>

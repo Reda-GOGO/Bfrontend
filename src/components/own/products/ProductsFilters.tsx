@@ -2,6 +2,7 @@ import { useProductsContext } from "@/application/products/store/products.store"
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 import { ArrowDownUp, ListFilter, SearchIcon, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
@@ -59,35 +60,43 @@ export default function ProductFilters() {
   return (
     <div className="flex flex-col gap-2 w-full">
       <AnimatePresence initial={false}>
-        {!isSearch && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-            className="flex justify-between items-center w-full"
-          >
-            <TabsList>
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="active">Active</TabsTrigger>
-              <TabsTrigger value="archived">Archived</TabsTrigger>
-            </TabsList>
+        {/* {!isSearch && ( */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2 }}
+          className={
+            cn("flex justify-between items-center w-full",
+              isSearch && "justify-end"
+            )}
+        >
+          {
+            !isSearch && (
 
-            <div className="flex gap-1">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => enableSearch()}
-              >
-                <SearchIcon className="mr-1" />
-                <ListFilter />
-              </Button>
-              <Button variant="outline" size="sm">
-                <ArrowDownUp />
-              </Button>
-            </div>
-          </motion.div>
-        )}
+              <TabsList>
+                <TabsTrigger value="all">All</TabsTrigger>
+                <TabsTrigger value="active">Active</TabsTrigger>
+                <TabsTrigger value="archived">Archived</TabsTrigger>
+              </TabsList>
+            )
+          }
+
+          <div className="flex gap-1">
+            <Button
+              variant={!isSearch ? "outline" : "default"}
+              size="sm"
+              onClick={() => enableSearch()}
+            >
+              <SearchIcon className="mr-1" />
+              <ListFilter />
+            </Button>
+            <Button variant="outline" size="sm">
+              <ArrowDownUp />
+            </Button>
+          </div>
+        </motion.div>
+        {/* )} */}
       </AnimatePresence>
 
       <AnimatePresence initial={false}>
@@ -95,10 +104,10 @@ export default function ProductFilters() {
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
+            exit={{ height: "auto", opacity: 1, y: 20 }}
             style={{ overflow: "hidden" }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="w-full mt-2"
+            className="w-full my-2"
           >
             <div className="relative w-full flex items-center">
               <Input

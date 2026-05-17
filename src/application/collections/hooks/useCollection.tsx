@@ -4,17 +4,39 @@ import type { Collection, Product } from "@/types";
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { collectionApi } from "../api/collection.api";
 
-export const createInitialState = (name = ""): Collection => {
-  const handle = genRanHex(24);
-  return {
-    id: 0,
-    name: name,
-    handle: handle,
-    description: `Description for Collection: ${name}, with handle: ${handle}`,
-    products: [], // This will hold our full product objects
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
+export const createInitialState = ({
+  mode,
+  handle
+}: {
+  mode: "create" | "update";
+  handle?: string
+}): Collection => {
+  if (mode === "create") {
+
+    const newHandle = genRanHex(24);
+    return {
+      id: 0,
+      name: "",
+      handle: newHandle,
+      description: `Description for Collection: ${name}, with handle: ${handle}`,
+      products: [], // This will hold our full product objects
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+  } else {
+    collectionApi.getCollection(handle).then(res => {
+      const { name, description, products, createdAt, updatedAt } = res;
+      return {
+        id: 0,
+        name,
+        handle,
+        description,
+        products,
+        createdAt,
+        updatedAt,
+      }
+    });
+  }
 };
 
 function useCollectionProductLoader({ search }: { search: string }) {
@@ -135,10 +157,60 @@ export function useCollectionDetail(handle: string | undefined) {
   };
 }
 
-export default function useCollection() {
-  const [collection, setCollection] = useState<Collection>(
-    createInitialState(),
-  );
+export default function useCollection({ mode, handle }: { mode: "create" | "update", handle?: string }) {
+  const [collection, setCollection] = useState<Collection>({
+    id: 0,
+    name: "",
+    handle: "",
+    description: "",
+    products: [],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
+
+  useEffect(() => {
+    if (mode === "create") {
+      const newHandle = genRanHex(24);
+
+      setCollection({
+        id: 0,
+        name: "",
+        handle: newHandle,
+        description: `Description for Collection with handle: ${newHandle}`,
+        products: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      return;
+    }
+
+    if (mode === "update" && handle) {
+      collectionApi.getCollection(handle).then((res) => {
+        const {
+          name,
+          image,
+          description,
+          products,
+          createdAt,
+          updatedAt,
+        } = res;
+
+        setCollection({
+          id: 0,
+          name,
+          handle,
+          image,
+          description,
+          products,
+          createdAt,
+          updatedAt,
+        });
+      });
+    }
+  }, [mode, handle]);
+
+  console.log("collection : ", collection);
   const [search, setSearch] = useState("");
   const [error, setError] = useState("");
 
@@ -186,7 +258,7 @@ export default function useCollection() {
   };
 
   const reset = useCallback(() => {
-    setCollection(createInitialState());
+    setCollection(createInitialState({ mode: "create" }));
   }, []);
 
   return {

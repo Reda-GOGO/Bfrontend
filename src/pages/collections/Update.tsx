@@ -25,7 +25,8 @@ export default function Update() {
     toggleProduct,
     isProductSelected,
     reset,
-  } = useCollection();
+  } = useCollection({ mode: "update", handle });
+  console.log("collection : ", collection);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -39,8 +40,11 @@ export default function Update() {
       if (collection.imageFile instanceof File) {
         formData.append("image", collection.imageFile);
       }
+      if (collection.image) {
+        formData.append("image", collection.image);
+      }
       if (collection.name) {
-        await collectionApi.createCollection(formData);
+        await collectionApi.updateCollection(collection.handle, formData);
       } else {
         toast.error("Failed to create collection , name is required");
         return;
