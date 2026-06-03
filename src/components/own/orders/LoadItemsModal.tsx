@@ -2,7 +2,7 @@ import type { OrderItemsHook } from "@/application/orders/hooks/useOrderItems";
 import Row from "@/components/shared/Row";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowRight, Calendar, Hash, ListFilter, MoreVertical, Package } from "lucide-react";
+import { Calendar, Check, CheckCircle2, Hash, ListFilter, Loader2, Package } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -16,115 +16,24 @@ import { useEffect, useRef, useState } from "react";
 import Col from "@/components/shared/Col";
 import { cn, formatMAD } from "@/lib/utils";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Checkbox } from "@/components/ui/checkbox";
-import type { Order, OrderItem } from "@/types";
-import { usePrevOrderItems, type PrevOrderItemsHook } from "@/application/orders/hooks/usePrevOrderItems";
-import { Badge } from "@/components/ui/badge";
+import type { Order } from "@/types";
+import {
+  usePrevOrderItems,
+  type filterType,
+  type PrevOrderItemsHook
+} from "@/application/orders/hooks/usePrevOrderItems";
 import { Separator } from "@/components/ui/separator";
 
-import {
-  FileText,        // Facture
-  ClipboardList,   // Bon de commande
-  ArrowRightFromLine, // Bon de livraison
-  FileEdit,        // Devis
-  Minus,           // empty / no type
-  Clock,           // pending
-  CircleCheckBig,  // paid
-  CircleX,         // cancelled
-  CircleDot,       // partially paid
-  ChevronDown,
-  LayoutList,
-  type LucideIcon,
-} from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import {
+  ORDER_TYPE_CONFIG,
+  ORDER_TYPE_FALLBACK,
+  ORDER_STATUS_CONFIG
+} from "@/components/shared/Icons";
+import { CheckMergingStatus } from "./CheckMergingItems";
 
-// ─── Type config ────────────────────────────────────────────────
-type OrderTypeCfg = {
-  icon: LucideIcon;
-  label: string;
-  bg: string;
-  text: string;
-  border: string;
-};
-
-const ORDER_TYPE_CONFIG: Record<string, OrderTypeCfg> = {
-  facture: {
-    icon: FileText,
-    label: "Facture",
-    bg: "bg-blue-50",
-    text: "text-blue-800",
-    border: "border-blue-800",
-  },
-  bon_de_commande: {
-    icon: ClipboardList,
-    label: "Bon de commande",
-    bg: "bg-green-50",
-    text: "text-green-800",
-    border: "border-green-200",
-  },
-  bon_de_livraison: {
-    icon: ArrowRightFromLine,
-    label: "Bon de livraison",
-    bg: "bg-amber-50",
-    text: "text-amber-900",
-    border: "border-amber-200",
-  },
-  devis: {
-    icon: FileEdit,
-    label: "Devis",
-    bg: "bg-violet-50",
-    text: "text-violet-800",
-    border: "border-violet-200",
-  },
-};
-
-const ORDER_TYPE_FALLBACK: OrderTypeCfg = {
-  icon: Minus,
-  label: "—",
-  bg: "bg-muted",
-  text: "text-muted-foreground",
-  border: "border-border/40",
-};
-
-// ─── Status config ───────────────────────────────────────────────
-type OrderStatusCfg = {
-  icon: LucideIcon;
-  label: string;
-  bg: string;
-  text: string;
-  border: string;
-};
-
-const ORDER_STATUS_CONFIG: Record<string, OrderStatusCfg> = {
-  pending: {
-    icon: Clock,
-    label: "Pending",
-    bg: "bg-amber-50",
-    text: "text-amber-900",
-    border: "border-amber-200",
-  },
-  paid: {
-    icon: CircleCheckBig,
-    label: "Paid",
-    bg: "bg-green-50",
-    text: "text-green-800",
-    border: "border-green-200",
-  },
-  cancelled: {
-    icon: CircleX,
-    label: "Cancelled",
-    bg: "bg-red-50",
-    text: "text-red-800",
-    border: "border-red-200",
-  },
-  partially_paid: {
-    icon: CircleDot,
-    label: "Partial",
-    bg: "bg-violet-50",
-    text: "text-violet-800",
-    border: "border-violet-200",
-  },
-};
+export type ModalPhase = "loading" | "checking" | "merging";
 
 export default function LoadItemsModal({
   hook
@@ -132,6 +41,8 @@ export default function LoadItemsModal({
   hook: OrderItemsHook
 }) {
   const [open, setOpen] = useState(false);
+  const [phase, setPhase] = useState<ModalPhase>("loading");
+  const prevOrderItemHook = usePrevOrderItems();
   return (
     <Dialog open={open}
       onOpenChange={setOpen}
@@ -152,47 +63,177 @@ export default function LoadItemsModal({
             Select products from previous orders to add &amp; merge them into the current order.
           </DialogDescription>
         </DialogHeader>
-        <LoadOrderItems hook={hook} />
+        <ModalContent
+          phase={phase}
+          orderItemHook={hook}
+          prevOrderItemHook={prevOrderItemHook}
+          setPhase={setPhase}
+          setOpen={setOpen}
+        />
 
-        {/* <DialogFooter className="px-6 py-4 shrink-0 border-t"> */}
-        {/*   <Button onClick={() => { setOpen(false); hook.setSearch(""); }} variant="outline">Cancel</Button> */}
-        {/*   <Button onClick={() => { setOpen(false); hook.setSearch(""); }} variant="default">Save</Button> */}
-        {/* </DialogFooter> */}
       </DialogContent>
     </Dialog>
   );
 }
-function LoadOrderItems({
-  hook
-}: {
-  hook: OrderItemsHook
-}) {
-  const orderHook = usePrevOrderItems();
 
+
+
+function ModalContent({
+  phase,
+  orderItemHook,
+  prevOrderItemHook,
+  setPhase,
+  setOpen,
+}: {
+  phase: ModalPhase;
+  orderItemHook: OrderItemsHook;
+  prevOrderItemHook: PrevOrderItemsHook
+  setPhase: React.Dispatch<React.SetStateAction<ModalPhase>>
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>
+
+}) {
+  switch (phase) {
+    case "loading":
+      return <LoadOrderItems
+        orderItemHook={orderItemHook}
+        prevOrderItemHook={prevOrderItemHook}
+        phase={phase}
+        setOpen={setOpen}
+        setPhase={setPhase}
+      />;
+    case "checking":
+      return <CheckMergingStatus
+        orderItemHook={orderItemHook}
+        prevOrderItemHook={prevOrderItemHook}
+        setPhase={setPhase}
+        setOpen={setOpen} />;
+    default:
+      return <LoadOrderItems
+        orderItemHook={orderItemHook}
+        prevOrderItemHook={prevOrderItemHook}
+        phase={phase}
+        setOpen={setOpen}
+        setPhase={setPhase}
+      />;
+  }
+}
+function LoadOrderItems({
+  orderItemHook,
+  prevOrderItemHook,
+  phase,
+  setOpen,
+  setPhase
+}: {
+  orderItemHook: OrderItemsHook;
+  prevOrderItemHook: PrevOrderItemsHook
+  phase: ModalPhase;
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>
+  setPhase: React.Dispatch<React.SetStateAction<ModalPhase>>
+}) {
+  const isAdded = prevOrderItemHook.selected.size > 0;
+  const selectedItems = prevOrderItemHook.selectedCount;
+  const [isFilter, setIsFilter] = useState(true);
+  const toogle = () => {
+    setIsFilter(!isFilter);
+    prevOrderItemHook.resetFilter();
+  }
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full h-full gap-4">
-      <Row className="w-full px-4 items-center ">
-        <Input
-          placeholder="Search previous orders ..."
-          value={orderHook.search}
-          onChange={(e) => orderHook.setSearch(e.target.value)}
-        />
-        <Button
-          variant="outline"
-          size="sm"
-        >
-          <ListFilter />
-        </Button>
-      </Row>
+      <Col>
+        <Row className="w-full px-4 items-center ">
+          <Input
+            placeholder="Search previous orders ..."
+            value={prevOrderItemHook.search}
+            onChange={(e) => prevOrderItemHook.setSearch(e.target.value)}
+          />
+          <Button
+            onClick={toogle}
+            variant={isFilter ? "default" : "outline"}
+            size="sm"
+          >
+            <ListFilter />
+          </Button>
+        </Row>
+        {
+          isFilter && (
+
+            <OrdersFilter
+              filter={prevOrderItemHook.filter}
+              setFilter={prevOrderItemHook.setFilter}
+            />
+          )
+        }
+      </Col>
       <OrdersList
-        orderHook={orderHook}
-        orders={orderHook.orders}
-        hook={hook}
+        orderHook={prevOrderItemHook}
+        orders={prevOrderItemHook.orders}
+        hook={orderItemHook}
       />
+
+      {
+        isAdded && (
+          <DialogFooter className="px-6 py-4 shrink-0 border-t">
+            <Button onClick={() => { setOpen(false); orderItemHook.setSearch(""); }} variant="outline">Cancel</Button>
+            <Button
+              onClick={() => { setPhase("checking"); orderItemHook.setSearch(""); }}
+              variant="default">
+              ({selectedItems}) Merge Items
+            </Button>
+          </DialogFooter>
+        )
+      }
     </div>
   );
 }
 
+
+function OrdersFilter({
+  filter,
+  setFilter
+}: {
+  filter: filterType,
+  setFilter: React.Dispatch<React.SetStateAction<filterType>>
+}) {
+  const types = Object.values(ORDER_TYPE_CONFIG);
+  const statuses = Object.values(ORDER_STATUS_CONFIG);
+  const isEqualString = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
+  return (
+    <div className="w-full flex flex-col gap-2 px-4 py-2 bg-background ">
+      <Row className="w-full gap-8">
+        <Label className="text-xs w-10 uppercase text-muted-foreground">type</Label>
+        <Row className="flex w-full gap-2 flex-wrap">
+          {types.map(({ icon: Icon, label }, idx) => (
+            <Button key={idx}
+              variant={isEqualString(filter.type, label) ? "default" : "outline"}
+              onClick={() => setFilter({ ...filter, type: label.toLowerCase() })}
+              className=" text-xs h-7  
+              px-4 py-1 rounded-full  
+              transition-all duration-200 border-2 ">
+              {Icon && <Icon className="w-3 h-3" />}
+              {label}
+            </Button>
+          ))}
+        </Row>
+      </Row>
+      <Row className="w-full gap-8">
+        <Label className="text-xs w-10 uppercase text-muted-foreground">status</Label>
+        <Row className="flex w-full gap-2 flex-wrap">
+          {statuses.map(({ icon: Icon, label }, idx) => (
+            <Button key={idx}
+              variant={isEqualString(filter.status, label) ? "default" : "outline"}
+              onClick={() => setFilter({ ...filter, status: label.toLowerCase() })}
+              className="text-xs h-7  
+              px-4 py-1 rounded-full  
+              transition-all duration-200 border-2">
+              {Icon && <Icon className="w-3 h-3" />}
+              {label}
+            </Button>
+          ))}
+        </Row>
+      </Row>
+    </div>
+  )
+}
 
 function OrdersList({
   orderHook,
@@ -248,8 +289,6 @@ function OrderCard({
   };
   const { addItem, removeItem, patchItem, selected } = orderHook;
   const isAdded = selected.has(order.id);
-  console.log("orderhook : selected", selected);
-  console.log("orderhook : isSelected", isAdded);
 
   const statusKey = (order.status ?? "pending").toLowerCase();
 

@@ -97,7 +97,7 @@ function OrderRow({
 
   const navigate = useNavigate();
 
-  const statusDef = getOrderStatus(status);
+  const statusDef = getOrderStatus(status ? status : "pending");
   const typeDef = getOrderType(type);
 
   const handleClick = (e: React.MouseEvent) => {

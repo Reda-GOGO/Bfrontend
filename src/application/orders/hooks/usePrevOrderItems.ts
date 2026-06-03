@@ -11,6 +11,10 @@ export type PaginationType = {
 };
 
 export type PrevOrderItemsHook = ReturnType<typeof usePrevOrderItems>;
+export type filterType = {
+  status: "all" | "paid" | "partially paid" | "pending" | "canceled";
+  type: "all" | "facture" | "bon de commande" | "bon de livraison" | "devis";
+};
 
 export function usePrevOrderItems() {
   const [search, setSearch] = useState<string>("");
@@ -18,6 +22,7 @@ export function usePrevOrderItems() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [selected, setSelected] = useState<Map<number, Order>>(new Map());
   const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+  const [filter, setFilter] = useState<filterType>({ status: "all", type: "all" });
   const [pagination, setPagination] = useState<PaginationType>({
     currentPage: 1,
     totalPages: 1,
@@ -49,6 +54,8 @@ export function usePrevOrderItems() {
         page: pagination.currentPage,
         search: debouncedSearch,
         limit: pagination.limit,
+        status: filter.status,
+        type: filter.type,
       })
       .then((res) => {
         if (!isMounted) return;
@@ -70,7 +77,7 @@ export function usePrevOrderItems() {
     return () => {
       isMounted = false;
     };
-  }, [pagination.currentPage, pagination.limit, debouncedSearch]);
+  }, [pagination.currentPage, pagination.limit, debouncedSearch, filter]);
 
   // selection 
 
@@ -123,6 +130,9 @@ export function usePrevOrderItems() {
     search,
     setSearch,
     orders,
+    filter,
+    setFilter,
+    resetFilter: () => setFilter({ status: "all", type: "all" }),
     isLoading,
     pagination,
     setPagination,

@@ -14,6 +14,8 @@ export const orderApi = {
     search?: string;
     limit?: number;
     filter_by?: string;
+    status?: string;
+    type?: string;
   }) {
     return http.get<OrderResponse>("/orders", params);
   },
