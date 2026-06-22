@@ -496,7 +496,7 @@ function ItemsList({
 }
 
 
-function ProductCard({
+export function ProductCard({
   product,
   selected,
   addItem,
@@ -858,6 +858,7 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+
 function UnitInput({ isAdded, product, patchItem, selected }) {
   const item = selected.get(product.id);
   const savedLabel = item.unitLabel;

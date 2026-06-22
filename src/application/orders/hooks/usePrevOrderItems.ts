@@ -1,4 +1,4 @@
-import type { Order } from "@/types";
+import type { Order, OrderItem } from "@/types";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { orderApi } from "../api/order.api";
 import { debounce } from "@/lib/utils";
@@ -30,6 +30,7 @@ export function usePrevOrderItems() {
     limit: 10,
   });
   const [debouncedSearch, setDebouncedSearch] = useState(search);
+  const [mergeItems, setMergeItems] = useState<Record<number, OrderItem[]>>({});
 
   // search & pagination 
 
@@ -142,6 +143,8 @@ export function usePrevOrderItems() {
     patchItem,
     isSelected,
     selectedCount,
+    mergeItems,
+    setMergeItems,
   };
 }
 

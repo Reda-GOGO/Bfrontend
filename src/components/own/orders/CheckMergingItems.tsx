@@ -17,7 +17,12 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { ModalPhase } from "./LoadItemsModal";
+import type { OrderItem } from "@/types";
 
+type conflictItems = {
+  item: OrderItem
+  orderId: number
+}
 /* ─────────────────────────────────────────────
    Root
 ───────────────────────────────────────────── */
@@ -33,8 +38,39 @@ export function CheckMergingStatus({
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const orderItems = Array.from(prevOrderItemHook.selected.values()).map((order) => order.items).flat()
-  console.log("orderItemhook : ", orderItemHook.orderItems)
-  console.log("prevItemhook : ", orderItems)
+  const currentItems = orderItemHook.orderItems.map((item) => ({ ...item, orderId: -1 }))
+  const allItems = [...orderItems, ...currentItems]
+  const analyzeConflicts = () => {
+    const grouped = allItems.reduce((acc, item) => {
+      if (!acc[item.productId]) {
+        acc[item.productId] = [];
+      }
+
+      acc[item.productId].push(item);
+      return acc;
+    }, {});
+
+
+    return grouped;
+
+  }
+  const grouped = analyzeConflicts()
+  const allProducts = Object.values(grouped).flat()
+  const conflictCount = Object.values(grouped).
+    reduce((acc, item) => item.length > 1 ? acc + 1 : acc, 0);
+
+  console.log("conflicts : ", conflictCount);
+  // console.log("merge results : ", grouped);
+
+
+  function merge() {
+    prevOrderItemHook.setMergeItems(grouped);
+    // allItems.map((item) => {
+    //   const product = { ...item.product, units: [item.productUnit] };
+    //   orderItemHook.addItem(product)
+    // })
+  }
+
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full h-full">
       <ScrollArea className="flex-1 min-h-0 w-full ">
@@ -42,7 +78,9 @@ export function CheckMergingStatus({
         <Col className="flex-1 min-h-0 w-full ">
           <MergeBanner />
           <div className="px-6 pb-6">
-            <CheckList />
+            <CheckList
+              itemCount={allProducts.length}
+              conflictCount={conflictCount} />
           </div>
         </Col>
         <ScrollBar />
@@ -60,7 +98,14 @@ export function CheckMergingStatus({
         >
           Back
         </Button>
-        <Button className="min-w-24 gap-1.5">
+        <Button
+          onClick={
+            () => {
+              merge();
+              setPhase("merging")
+            }
+          }
+          className="min-w-24 gap-1.5">
           Next
           <Check className="h-3.5 w-3.5" />
         </Button>
@@ -76,7 +121,7 @@ const CHECK_STEPS = [
   {
     label: "Loading previous order items",
     icon: Package,
-    getSubtitle: () => `${20} items found`,
+    getSubtitle: (number: number) => `${number} items found`,
   },
   {
     label: "Comparing with current order",
@@ -86,7 +131,7 @@ const CHECK_STEPS = [
   {
     label: "Detecting conflicts",
     icon: AlertTriangle,
-    getSubtitle: () => `${13} conflicts detected`,
+    getSubtitle: (number: number) => `${number} conflicts detected`,
   },
   {
     label: "Ready to resolve",
@@ -101,7 +146,13 @@ type StatusType = "pending" | "running" | "success" | "failure";
 /* ─────────────────────────────────────────────
    CheckList
 ───────────────────────────────────────────── */
-function CheckList() {
+function CheckList({
+  itemCount,
+  conflictCount,
+}: {
+  itemCount: number,
+  conflictCount: number | unknown
+}) {
   const steps = CHECK_STEPS;
   const [stage, setStage] = useState<StageType>("idle");
   const [statuses, setStatuses] = useState<StatusType[]>(
@@ -122,7 +173,7 @@ function CheckList() {
   const animate = async () => {
     for (let i = 0; i < steps.length; i++) {
       updateStatues(i, "running");
-      await delay(1000);
+      await delay(300);
 
       updateStatues(i, "success");
 
@@ -142,9 +193,25 @@ function CheckList() {
       </div>
       <div className=" ">
         {steps.map((step, idx) => {
+          let subTitle;
+          switch (idx) {
+            case 0:
+              subTitle = step.getSubtitle(itemCount);
+              break;
+            case 2:
+              subTitle = step.getSubtitle(conflictCount ? conflictCount : 0);
+              break;
+            default:
+              subTitle = step.getSubtitle();
+          }
           return (
             <div key={idx}>
-              <StepRow key={idx} step={step} status={statuses[idx]} />
+              <StepRow
+                key={idx}
+                subTitle={subTitle}
+                step={step}
+                status={statuses[idx]}
+              />
               {
 
                 idx < steps.length - 1 && (
@@ -152,7 +219,7 @@ function CheckList() {
                     statuses[idx] === "pending" &&
                     "bg-muted border border-border text-muted-foreground",
                     statuses[idx] === "running" &&
-                    "bg-blue-100 border border-blue-200 text-blue-600 dark:bg-blue-900/60 dark:border-blue-700 dark:text-blue-300",
+                    "bg-amber-100 border border-amber-200 text-amber-600 dark:bg-amber-900/60 dark:border-amber-700 dark:text-amber-300",
                     statuses[idx] === "success" &&
                     "bg-green-100 border border-green-200 text-green-600 dark:bg-green-900/60 dark:border-green-700 dark:text-green-400",
                     statuses[idx] === "failure" &&
@@ -177,12 +244,14 @@ function CheckList() {
 function StepRow({
   step,
   status,
+  subTitle,
 }: {
   step: (typeof CHECK_STEPS)[0];
   status: StatusType;
+  subTitle: string;
 }) {
   const Icon = step.icon;
-  const subtitle = step.getSubtitle();
+  const subtitle = subTitle;
 
   return (
     <Row
@@ -200,7 +269,7 @@ function StepRow({
           status === "pending" &&
           "bg-muted border border-border text-muted-foreground",
           status === "running" &&
-          "bg-blue-100 border border-blue-200 text-blue-600 dark:bg-blue-900/60 dark:border-blue-700 dark:text-blue-300",
+          "bg-amber-100 border border-amber-200 text-amber-600 dark:bg-amber-900/60 dark:border-amber-700 dark:text-amber-300",
           status === "success" &&
           "bg-green-100 border border-green-200 text-green-600 dark:bg-green-900/60 dark:border-green-700 dark:text-green-400",
           status === "failure" &&
@@ -267,6 +336,7 @@ function StepRow({
 /* ─────────────────────────────────────────────
    MergeBanner
 ───────────────────────────────────────────── */
+
 function MergeBanner() {
   const [animate, setAnimate] = useState(false);
 
@@ -295,6 +365,7 @@ function MergeBanner() {
 /* ─────────────────────────────────────────────
    WaitingUI
 ───────────────────────────────────────────── */
+
 function WaitingUI() {
   return (
     <div className="relative flex items-center justify-center w-24 h-24">
@@ -310,11 +381,12 @@ function WaitingUI() {
 /* ─────────────────────────────────────────────
    SuccessUI
 ───────────────────────────────────────────── */
+
 function SuccessUI() {
   const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsSuccess(true), 2000);
+    const timer = setTimeout(() => setIsSuccess(true), 1000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -353,6 +425,8 @@ function SuccessUI() {
 /* ─────────────────────────────────────────────
    FailureUI
 ───────────────────────────────────────────── */
+
+
 function FailureUI() {
   const [isSettled, setIsSettled] = useState(false);
 

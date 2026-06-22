@@ -182,13 +182,13 @@ function CollectionRow({
           )}
         </div>
         {/* Name + description */}
-        <div className="space-y-0.5 max-w-xs">
-          <p className="font-semibold text-sm leading-snug group-hover:text-primary transition-colors truncate">
+        <div className="max-w-xs items-center justify-between flex">
+          <p className="font-medium text-sm leading-snug group-hover:text-primary transition-colors truncate">
             {collection.name}
           </p>
-          <p className="text-xs text-muted-foreground truncate">
-            {collection.description || "No description"}
-          </p>
+          {/* <p className="text-xs text-muted-foreground truncate"> */}
+          {/*   {collection.description || "No description"} */}
+          {/* </p> */}
         </div>
       </TableCell>
       {/* Products count */}

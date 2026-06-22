@@ -32,6 +32,7 @@ import {
   ORDER_STATUS_CONFIG
 } from "@/components/shared/Icons";
 import { CheckMergingStatus } from "./CheckMergingItems";
+import MergePanel from "./MergePanel";
 
 export type ModalPhase = "loading" | "checking" | "merging";
 
@@ -107,6 +108,12 @@ function ModalContent({
         prevOrderItemHook={prevOrderItemHook}
         setPhase={setPhase}
         setOpen={setOpen} />;
+    case "merging":
+      return <MergePanel
+        prevOrderItemHook={prevOrderItemHook}
+        setPhase={setPhase}
+        setOpen={setOpen}
+      />;
     default:
       return <LoadOrderItems
         orderItemHook={orderItemHook}
